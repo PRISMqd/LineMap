@@ -1,1529 +1,992 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LineMap — IV Line Safety Intelligence | LineLogic by PRISMqd</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --navy-deep: #060c1a;
-    --navy: #0a1225;
-    --navy-mid: #0f1c35;
-    --navy-light: #162040;
-    --gold-light: #f0e2b6;
-    --gold: #c9a84c;
-    --gold-dark: #a07830;
-    --gold-gradient: linear-gradient(135deg, #f0e2b6 0%, #c9a84c 40%, #a07830 100%);
-    --gold-gradient-h: linear-gradient(90deg, #f0e2b6 0%, #c9a84c 50%, #a07830 100%);
-    --white: #f4f1eb;
-    --white-dim: rgba(244,241,235,0.65);
-    --border: rgba(201,168,76,0.18);
-    --border-bright: rgba(201,168,76,0.45);
-  }
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; }
-
-  body {
-    background: var(--navy-deep);
-    color: var(--white);
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 300;
-    line-height: 1.6;
-    overflow-x: hidden;
-  }
-
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-    opacity: 0.35;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* NAV */
-  nav {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 3rem;
-    background: rgba(6,12,26,0.88);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .nav-brand {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    text-decoration: none;
-    cursor: pointer;
-  }
-
-  .nav-logo-img {
-    width: 36px;
-    height: 36px;
-    object-fit: contain;
-  }
-
-  .nav-wordmark {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.3rem;
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    background: var(--gold-gradient-h);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .nav-sub {
-    font-size: 0.58rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--white-dim);
-    font-family: 'DM Mono', monospace;
-    margin-top: -2px;
-  }
-
-  .nav-links {
-    display: flex;
-    align-items: center;
-    gap: 2rem;
-    list-style: none;
-  }
-
-  .nav-links a {
-    font-size: 0.72rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--white-dim);
-    text-decoration: none;
-    font-family: 'DM Mono', monospace;
-    transition: color 0.3s;
-    cursor: pointer;
-  }
-
-  .nav-links a:hover { color: var(--gold-light); }
-
-  .nav-cta {
-    background: transparent !important;
-    border: 1px solid var(--border-bright) !important;
-    color: var(--gold-light) !important;
-    padding: 0.45rem 1.1rem !important;
-    border-radius: 2px !important;
-  }
-
-  .nav-cta:hover { background: rgba(201,168,76,0.12) !important; }
-
-  /* HERO */
-  .hero {
-    position: relative;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 9rem 2rem 6rem;
-    overflow: hidden;
-    z-index: 1;
-  }
-
-  .hero-glow {
-    position: absolute;
-    top: 35%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 700px; height: 700px;
-    background: radial-gradient(ellipse, rgba(201,168,76,0.07) 0%, transparent 68%);
-    pointer-events: none; z-index: 0;
-  }
-
-  .hero-eyebrow {
-    position: relative; z-index: 1;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.68rem;
-    letter-spacing: 0.28em;
-    text-transform: uppercase;
-    color: var(--gold);
-    margin-bottom: 1.8rem;
-    opacity: 0;
-    animation: fadeUp 0.8s ease forwards 0.2s;
-  }
-
-  .hero-logo-mark {
-    position: relative; z-index: 1;
-    margin-bottom: 2rem;
-    opacity: 0;
-    animation: fadeUp 1s ease forwards 0.4s;
-  }
-
-  .hero-logo-mark img {
-    width: 88px; height: 88px;
-    object-fit: contain;
-    filter: drop-shadow(0 0 28px rgba(201,168,76,0.3));
-  }
-
-  .hero-headline {
-    position: relative; z-index: 1;
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(3.2rem, 7vw, 6.5rem);
-    font-weight: 300;
-    line-height: 1.05;
-    letter-spacing: -0.01em;
-    margin-bottom: 1.5rem;
-    opacity: 0;
-    animation: fadeUp 1s ease forwards 0.6s;
-  }
-
-  .hero-headline em {
-    font-style: italic;
-    background: var(--gold-gradient-h);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .hero-sub {
-    position: relative; z-index: 1;
-    font-size: 1.05rem;
-    font-weight: 300;
-    color: var(--white-dim);
-    max-width: 580px;
-    margin: 0 auto 3rem;
-    opacity: 0;
-    animation: fadeUp 1s ease forwards 0.85s;
-    line-height: 1.75;
-  }
-
-  .hero-actions {
-    position: relative; z-index: 1;
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    flex-wrap: wrap;
-    opacity: 0;
-    animation: fadeUp 1s ease forwards 1.05s;
-  }
-
-  .btn-primary {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.9rem 2rem;
-    background: var(--gold-gradient);
-    color: var(--navy-deep);
-    font-family: 'DM Mono', monospace;
-    font-size: 0.74rem;
-    font-weight: 400;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    text-decoration: none;
-    border: none;
-    border-radius: 2px;
-    cursor: pointer;
-    transition: opacity 0.25s, transform 0.25s;
-  }
-
-  .btn-primary:hover { opacity: 0.88; transform: translateY(-2px); }
-
-  .btn-secondary {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.9rem 2rem;
-    background: transparent;
-    color: var(--gold-light);
-    font-family: 'DM Mono', monospace;
-    font-size: 0.74rem;
-    font-weight: 400;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    text-decoration: none;
-    border: 1px solid var(--border-bright);
-    border-radius: 2px;
-    cursor: pointer;
-    transition: background 0.25s, transform 0.25s;
-  }
-
-  .btn-secondary:hover { background: rgba(201,168,76,0.09); transform: translateY(-2px); }
-
-  .scroll-hint {
-    position: absolute;
-    bottom: 2.5rem; left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.4rem;
-    opacity: 0;
-    animation: fadeIn 1s ease forwards 2s;
-    z-index: 1;
-  }
-
-  .scroll-hint span {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.58rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: rgba(201,168,76,0.45);
-  }
-
-  .scroll-line {
-    width: 1px; height: 46px;
-    background: linear-gradient(to bottom, rgba(201,168,76,0.5), transparent);
-    animation: scrollPulse 2s ease-in-out infinite;
-  }
-
-  /* STAT BAR */
-  .stat-bar {
-    position: relative; z-index: 1;
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    background: rgba(15,28,53,0.6);
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-  }
-
-  .stat-item {
-    padding: 2.2rem 1.5rem;
-    text-align: center;
-    border-right: 1px solid var(--border);
-    transition: background 0.3s;
-  }
-
-  .stat-item:last-child { border-right: none; }
-  .stat-item:hover { background: rgba(201,168,76,0.05); }
-
-  /* HIGH CONTRAST stat numbers */
-  .stat-number {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 2.8rem;
-    font-weight: 400;
-    line-height: 1;
-    margin-bottom: 0.5rem;
-    color: #f0e2b6;
-  }
-
-  .stat-label {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.62rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: rgba(244,241,235,0.65);
-    line-height: 1.5;
-  }
-
-  /* SECTIONS */
-  section { position: relative; z-index: 1; }
-
-  .section-inner {
-    max-width: 1160px;
-    margin: 0 auto;
-    padding: 7rem 3rem;
-  }
-
-  .section-tag {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.63rem;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: var(--gold);
-    margin-bottom: 1.2rem;
-    display: block;
-  }
-
-  .section-headline {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(2.2rem, 4vw, 3.6rem);
-    font-weight: 300;
-    line-height: 1.15;
-    margin-bottom: 1.4rem;
-  }
-
-  .section-headline em {
-    font-style: italic;
-    background: var(--gold-gradient-h);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .section-body {
-    font-size: 1rem;
-    color: var(--white-dim);
-    line-height: 1.8;
-    max-width: 560px;
-  }
-
-  /* PROBLEM */
-  .problem-section {
-    background: linear-gradient(180deg, var(--navy-deep) 0%, var(--navy-mid) 100%);
-  }
-
-  .problem-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 5rem;
-    align-items: center;
-  }
-
-  .problem-social-img {
-    width: 100%;
-    max-width: 340px;
-    border-radius: 3px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-    display: block;
-    margin-top: 2rem;
-  }
-
-  .problem-cards {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    border: 1px solid var(--border);
-  }
-
-  .problem-card {
-    padding: 1.6rem 1.8rem;
-    background: rgba(15,28,53,0.6);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    gap: 1.1rem;
-    align-items: flex-start;
-    transition: background 0.3s;
-  }
-
-  .problem-card:last-child { border-bottom: none; }
-  .problem-card:hover { background: rgba(201,168,76,0.04); }
-
-  .problem-icon {
-    width: 30px; height: 30px;
-    flex-shrink: 0;
-    background: rgba(201,168,76,0.08);
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.85rem;
-    margin-top: 2px;
-  }
-
-  .problem-card h4 {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.1rem;
-    font-weight: 500;
-    margin-bottom: 0.25rem;
-  }
-
-  .problem-card p {
-    font-size: 0.86rem;
-    color: var(--white-dim);
-    line-height: 1.6;
-  }
-
-  /* FEATURES */
-  .features-section { background: var(--navy-deep); }
-
-  .features-header { text-align: center; margin-bottom: 4.5rem; }
-  .features-header .section-body { margin: 0 auto; text-align: center; }
-
-  .features-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1px;
-    background: var(--border);
-    border: 1px solid var(--border);
-  }
-
-  .feature-card {
-    background: var(--navy-deep);
-    padding: 2.5rem 2rem;
-    transition: background 0.4s;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .feature-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 1px;
-    background: var(--gold-gradient-h);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.4s ease;
-  }
-
-  .feature-card:hover { background: rgba(15,28,53,0.95); }
-  .feature-card:hover::before { transform: scaleX(1); }
-
-  .feature-number {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 3.2rem;
-    font-weight: 300;
-    color: rgba(201,168,76,0.14);
-    line-height: 1;
-    margin-bottom: 1rem;
-  }
-
-  .feature-dot-row {
-    display: flex;
-    align-items: center;
-    gap: 0.7rem;
-    margin-bottom: 0.8rem;
-  }
-
-  .feature-dot {
-    width: 7px; height: 7px;
-    background: var(--gold-gradient);
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  .feature-card h3 {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.3rem;
-    font-weight: 500;
-    line-height: 1.2;
-  }
-
-  .feature-card p {
-    font-size: 0.87rem;
-    color: var(--white-dim);
-    line-height: 1.75;
-  }
-
-  /* HOW IT WORKS */
-  .how-section {
-    background: linear-gradient(180deg, var(--navy-mid) 0%, var(--navy-deep) 100%);
-  }
-
-  .how-grid {
-    display: grid;
-    grid-template-columns: 1fr 1.15fr;
-    gap: 5rem;
-    align-items: start;
-  }
-
-  .how-steps { display: flex; flex-direction: column; margin-top: 1rem; }
-
-  .how-step {
-    display: flex;
-    gap: 1.4rem;
-    padding: 1.8rem 0;
-    border-bottom: 1px solid var(--border);
-    transition: padding-left 0.3s;
-  }
-
-  .how-step:first-child { border-top: 1px solid var(--border); }
-  .how-step:hover { padding-left: 0.5rem; }
-
-  .step-num {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.7rem;
-    font-weight: 300;
-    color: var(--gold-light);
-    line-height: 1;
-    min-width: 1.8rem;
-    padding-top: 0.15rem;
-  }
-
-  .how-step h4 {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.15rem;
-    font-weight: 500;
-    margin-bottom: 0.35rem;
-  }
-
-  .how-step p {
-    font-size: 0.86rem;
-    color: var(--white-dim);
-    line-height: 1.7;
-  }
-
-  .app-screenshots { display: flex; flex-direction: column; gap: 1.4rem; }
-
-  .screenshot-label {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.58rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--gold);
-    margin-bottom: 0.4rem;
-  }
-
-  .screenshot-frame {
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    overflow: hidden;
-    box-shadow: 0 24px 60px rgba(0,0,0,0.5), 0 0 40px rgba(201,168,76,0.05);
-    background: var(--navy-mid);
-  }
-
-  .screenshot-bar {
-    background: var(--navy-mid);
-    border-bottom: 1px solid var(--border);
-    padding: 0.6rem 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-  }
-
-  .s-dot { width: 7px; height: 7px; border-radius: 50%; }
-  .s-dot:nth-child(1) { background: rgba(201,168,76,0.4); }
-  .s-dot:nth-child(2) { background: rgba(201,168,76,0.2); }
-  .s-dot:nth-child(3) { background: rgba(201,168,76,0.1); }
-
-  .s-title {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.55rem;
-    letter-spacing: 0.18em;
-    color: var(--white-dim);
-    margin-left: auto;
-    text-transform: uppercase;
-  }
-
-  .screenshot-frame img { width: 100%; display: block; }
-
-  /* BODY MAP */
-  .bodymap-section {
-    background: var(--navy-deep);
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .bodymap-grid {
-    display: grid;
-    grid-template-columns: 1fr 1.2fr;
-    gap: 5rem;
-    align-items: center;
-  }
-
-  .bodymap-figure-wrap {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 3rem;
-    background: rgba(15,28,53,0.4);
-    border: 1px solid var(--border);
-    border-radius: 3px;
-    position: relative;
-    min-height: 420px;
-  }
-
-  .bodymap-figure-wrap img {
-    max-height: 360px;
-    object-fit: contain;
-    filter: invert(1) sepia(0.25) saturate(0.5) brightness(0.8);
-    opacity: 0.72;
-  }
-
-  .map-pin {
-    position: absolute;
-    width: 10px; height: 10px;
-    border-radius: 50%;
-    background: var(--gold);
-    box-shadow: 0 0 0 3px rgba(201,168,76,0.25), 0 0 12px rgba(201,168,76,0.4);
-    animation: pinPulse 2.5s ease-in-out infinite;
-    pointer-events: none;
-  }
-
-  .map-pin::after {
-    content: '';
-    position: absolute;
-    inset: -5px;
-    border-radius: 50%;
-    border: 1px solid rgba(201,168,76,0.3);
-    animation: pinRing 2.5s ease-in-out infinite;
-  }
-
-  .pin-neck  { top: 16%; left: 51%; }
-  .pin-chest { top: 28%; left: 57%; animation-delay: 0.6s; }
-  .pin-arm   { top: 42%; left: 16%; animation-delay: 1.2s; }
-
-  /* AUDIENCE TABS */
-  .audience-section { background: var(--navy-deep); }
-  .audience-header { text-align: center; margin-bottom: 3rem; }
-
-  .tab-nav {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 3rem;
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    overflow: hidden;
-    width: fit-content;
-    margin-left: auto; margin-right: auto;
-  }
-
-  .tab-btn {
-    padding: 0.65rem 1.8rem;
-    background: transparent;
-    border: none;
-    border-right: 1px solid var(--border);
-    color: var(--white-dim);
-    font-family: 'DM Mono', monospace;
-    font-size: 0.66rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: background 0.25s, color 0.25s;
-  }
-
-  .tab-btn:last-child { border-right: none; }
-  .tab-btn.active { background: rgba(201,168,76,0.12); color: var(--gold-light); }
-  .tab-btn:hover:not(.active) { background: rgba(201,168,76,0.05); color: var(--white); }
-
-  .tab-content { display: none; }
-  .tab-content.active { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; }
-
-  .tab-points { list-style: none; display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem; }
-
-  .tab-points li {
-    display: flex;
-    gap: 0.9rem;
-    align-items: flex-start;
-    font-size: 0.92rem;
-    color: var(--white-dim);
-    line-height: 1.65;
-  }
-
-  .tab-points li::before {
-    content: '→';
-    color: var(--gold);
-    font-family: 'DM Mono', monospace;
-    flex-shrink: 0;
-  }
-
-  .tab-quote {
-    background: rgba(15,28,53,0.8);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--gold);
-    padding: 2rem;
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.3rem;
-    font-style: italic;
-    font-weight: 300;
-    line-height: 1.55;
-  }
-
-  .tab-quote cite {
-    display: block;
-    margin-top: 1rem;
-    font-style: normal;
-    font-size: 0.72rem;
-    font-family: 'DM Mono', monospace;
-    letter-spacing: 0.12em;
-    color: var(--gold);
-  }
-
-  /* SOCIAL POSTS */
-  .social-section {
-    background: linear-gradient(180deg, var(--navy-mid) 0%, var(--navy-deep) 100%);
-    border-top: 1px solid var(--border);
-  }
-
-  .social-header { text-align: center; margin-bottom: 3rem; }
-
-  .social-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1.2rem;
-  }
-
-  .social-post {
-    border: 1px solid var(--border);
-    border-radius: 3px;
-    overflow: hidden;
-    transition: border-color 0.3s, transform 0.3s;
-  }
-
-  .social-post:hover {
-    border-color: var(--border-bright);
-    transform: translateY(-3px);
-  }
-
-  .social-post img {
-    width: 100%;
-    display: block;
-    aspect-ratio: 1 / 1;
-    object-fit: cover;
-  }
-
-  /* TRACTION */
-  .pilot-section {
-    background: var(--navy-deep);
-    border-top: 1px solid var(--border);
-  }
-
-  .pilot-grid {
-    display: grid;
-    grid-template-columns: 1.2fr 1fr;
-    gap: 5rem;
-    align-items: center;
-  }
-
-  .pilot-badges { display: flex; flex-direction: column; gap: 0.9rem; }
-
-  .pilot-badge {
-    display: flex;
-    align-items: center;
-    gap: 1.1rem;
-    padding: 1.3rem 1.5rem;
-    border: 1px solid var(--border);
-    background: rgba(6,12,26,0.4);
-    border-radius: 2px;
-    transition: border-color 0.3s, background 0.3s;
-  }
-
-  .pilot-badge:hover {
-    border-color: var(--border-bright);
-    background: rgba(201,168,76,0.04);
-  }
-
-  .badge-icon {
-    width: 38px; height: 38px;
-    background: rgba(201,168,76,0.08);
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-    flex-shrink: 0;
-  }
-
-  .badge-text h4 {
-    font-size: 0.84rem;
-    font-weight: 400;
-    color: var(--white);
-    margin-bottom: 0.15rem;
-  }
-
-  .badge-text p {
-    font-size: 0.76rem;
-    color: var(--white-dim);
-    font-family: 'DM Mono', monospace;
-    letter-spacing: 0.04em;
-    line-height: 1.4;
-  }
-
-  /* CTA / CONTACT */
-  .cta-section {
-    background: var(--navy-deep);
-    text-align: center;
-    border-top: 1px solid var(--border);
-  }
-
-  .cta-inner {
-    max-width: 680px;
-    margin: 0 auto;
-    padding: 8rem 2rem;
-  }
-
-  .cta-logo-mark { margin: 0 auto 2rem; width: 56px; }
-
-  .cta-logo-mark img {
-    width: 56px; height: 56px;
-    object-fit: contain;
-    filter: drop-shadow(0 0 16px rgba(201,168,76,0.3));
-  }
-
-  .cta-headline {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(2.5rem, 5vw, 4.5rem);
-    font-weight: 300;
-    line-height: 1.1;
-    margin-bottom: 1.4rem;
-  }
-
-  .cta-headline em {
-    font-style: italic;
-    background: var(--gold-gradient-h);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .cta-body { font-size: 1rem; color: var(--white-dim); margin-bottom: 2.5rem; line-height: 1.75; }
-
-  .cta-form {
-    display: flex;
-    flex-direction: column;
-    gap: 0.8rem;
-    max-width: 480px;
-    margin: 0 auto;
-  }
-
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
-
-  .cta-form input, .cta-form select {
-    width: 100%;
-    padding: 0.82rem 1rem;
-    background: rgba(15,28,53,0.7);
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    color: var(--white);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.88rem;
-    outline: none;
-    transition: border-color 0.3s;
-    -webkit-appearance: none;
-  }
-
-  .cta-form input::placeholder { color: rgba(244,241,235,0.28); }
-  .cta-form input:focus, .cta-form select:focus { border-color: var(--gold); }
-  .cta-form select { color: rgba(244,241,235,0.55); }
-  .cta-form select option { background: var(--navy-mid); color: var(--white); }
-
-  .cta-form button {
-    width: 100%;
-    padding: 1rem;
-    background: var(--gold-gradient);
-    color: var(--navy-deep);
-    border: none;
-    border-radius: 2px;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.74rem;
-    font-weight: 400;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    cursor: pointer;
-    margin-top: 0.4rem;
-    transition: opacity 0.25s, transform 0.25s;
-  }
-
-  .cta-form button:hover { opacity: 0.88; transform: translateY(-1px); }
-
-  .form-note {
-    font-size: 0.7rem;
-    color: rgba(244,241,235,0.28);
-    font-family: 'DM Mono', monospace;
-    letter-spacing: 0.08em;
-    margin-top: 0.3rem;
-  }
-
-  .form-success {
-    display: none;
-    padding: 2rem;
-    border: 1px solid var(--border-bright);
-    background: rgba(201,168,76,0.06);
-    border-radius: 2px;
-  }
-
-  .form-success h4 {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.6rem;
-    font-weight: 400;
-    margin-bottom: 0.5rem;
-    background: var(--gold-gradient-h);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .form-success p { font-size: 0.88rem; color: var(--white-dim); }
-
-  /* FOOTER */
-  footer {
-    position: relative; z-index: 1;
-    border-top: 1px solid var(--border);
-    padding: 2.2rem 3rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: var(--navy-deep);
-  }
-
-  .footer-brand {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.62rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--white-dim);
-    line-height: 1.7;
-  }
-
-  .footer-brand span {
-    background: var(--gold-gradient-h);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .footer-copy {
-    color: rgba(244,241,235,0.2);
-    font-size: 0.56rem;
-    display: block;
-    margin-top: 0.2rem;
-    -webkit-text-fill-color: rgba(244,241,235,0.2);
-  }
-
-  .footer-links { display: flex; gap: 2rem; list-style: none; }
-
-  .footer-links a {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.6rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: rgba(244,241,235,0.28);
-    text-decoration: none;
-    transition: color 0.3s;
-    cursor: pointer;
-  }
-
-  .footer-links a:hover { color: var(--gold-light); }
-
-  .gold-rule { height: 1px; background: var(--gold-gradient-h); opacity: 0.25; }
-
-  /* ANIMATIONS */
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(18px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-  @keyframes scrollPulse {
-    0%, 100% { opacity: 0.35; }
-    50% { opacity: 0.9; }
-  }
-
-  @keyframes pinPulse {
-    0%, 100% { transform: scale(1); opacity: 0.8; }
-    50% { transform: scale(1.3); opacity: 1; }
-  }
-
-  @keyframes pinRing {
-    0% { transform: scale(1); opacity: 0.5; }
-    100% { transform: scale(2.8); opacity: 0; }
-  }
-
-  .reveal {
-    opacity: 0;
-    transform: translateY(22px);
-    transition: opacity 0.75s ease, transform 0.75s ease;
-  }
-
-  .reveal.visible { opacity: 1; transform: translateY(0); }
-
-  /* RESPONSIVE */
-  @media (max-width: 960px) {
-    .stat-bar { grid-template-columns: repeat(2, 1fr); }
-    .stat-item:nth-child(2) { border-right: none; }
-    .problem-grid, .how-grid, .bodymap-grid, .pilot-grid { grid-template-columns: 1fr; gap: 3rem; }
-    .features-grid { grid-template-columns: 1fr 1fr; }
-    .tab-content.active { grid-template-columns: 1fr; }
-    .social-grid { grid-template-columns: repeat(2, 1fr); }
-    nav { padding: 0.9rem 1.5rem; }
-    .nav-links { display: none; }
-    .section-inner { padding: 4.5rem 1.5rem; }
-    footer { flex-direction: column; gap: 1.5rem; text-align: center; }
-    .form-row { grid-template-columns: 1fr; }
-  }
-
-  @media (max-width: 600px) {
-    .features-grid { grid-template-columns: 1fr; }
-  }
-</style>
-</head>
-<body>
-
-<!-- NAV -->
-<nav>
-  <a href="#" class="nav-brand" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;">
-    <img src="logo.png" alt="LineMap Logo" class="nav-logo-img">
-    <div>
-      <div class="nav-wordmark">LineMap</div>
-      <div class="nav-sub">by LineLogic · PRISMqd</div>
-    </div>
-  </a>
-  <ul class="nav-links">
-    <li><a onclick="smoothScroll('problem')">The Problem</a></li>
-    <li><a onclick="smoothScroll('solution')">Solution</a></li>
-    <li><a onclick="smoothScroll('how')">How It Works</a></li>
-    <li><a onclick="smoothScroll('pilot')">Traction</a></li>
-    <li><a onclick="smoothScroll('contact')" class="nav-cta">Request Access</a></li>
-  </ul>
-</nav>
-
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-glow"></div>
-  <p class="hero-eyebrow">LineLogic · PRISMqd · IV Line Safety Intelligence</p>
-  <div class="hero-logo-mark">
-    <img src="logo.png" alt="LineMap">
-  </div>
-  <h1 class="hero-headline">
-    Know the <em>limits.</em><br>Not just the lines.
-  </h1>
-  <p class="hero-sub">
-    LineMap is the first clinical decision support tool purpose-built for IV line and infusion safety — bringing structured intelligence to one of healthcare's most error-prone workflows.
-  </p>
-  <div class="hero-actions">
-    <button class="btn-primary" onclick="smoothScroll('contact')">Request Early Access</button>
-    <button class="btn-secondary" onclick="smoothScroll('how')">See How It Works</button>
-  </div>
-  <div class="scroll-hint">
-    <span>Explore</span>
-    <div class="scroll-line"></div>
-  </div>
-</section>
-
-<!-- STAT BAR -->
-<div class="stat-bar reveal">
-  <div class="stat-item">
-    <div class="stat-number">1 in 3</div>
-    <div class="stat-label">ICU patients with central line complications</div>
-  </div>
-  <div class="stat-item">
-    <div class="stat-number">$46K</div>
-    <div class="stat-label">Average cost per CLABSI event</div>
-  </div>
-  <div class="stat-item">
-    <div class="stat-number">250K+</div>
-    <div class="stat-label">Annual IV line errors in U.S. hospitals</div>
-  </div>
-  <div class="stat-item">
-    <div class="stat-number">72%</div>
-    <div class="stat-label">Of errors occur at the point of infusion assignment</div>
-  </div>
-</div>
-
-<!-- PROBLEM -->
-<section class="problem-section" id="problem">
-  <div class="section-inner">
-    <div class="problem-grid">
-      <div class="reveal">
-        <span class="section-tag">The Problem</span>
-        <h2 class="section-headline">
-          The system<br>didn't fail.<br><em>It never existed.</em>
-        </h2>
-        <p class="section-body">
-          Nurses managing complex patients juggle multiple lines, lumens, and infusions under pressure — without any intelligent decision support. The result is preventable harm, escalating costs, and clinician burnout.
-        </p>
-        <img src="The_system_never_existed.png" alt="The system never existed" class="problem-social-img">
-      </div>
-      <div class="problem-cards reveal">
-        <div class="problem-card">
-          <div class="problem-icon">⚠</div>
-          <div>
-            <h4>Incompatible Infusion Assignment</h4>
-            <p>Drug-drug incompatibility errors occur when lumens are assigned without structured guidance, leading to adverse reactions and line failures.</p>
-          </div>
-        </div>
-        <div class="problem-card">
-          <div class="problem-icon">🔀</div>
-          <div>
-            <h4>No Shared Mental Model</h4>
-            <p>Shift handoffs depend on verbal communication — no single source of truth for active lines and their configurations across the care team.</p>
-          </div>
-        </div>
-        <div class="problem-card">
-          <div class="problem-icon">📋</div>
-          <div>
-            <h4>EHR Blind Spots</h4>
-            <p>EHR systems capture orders but not vascular access topology. There is no map of what is running where — and why.</p>
-          </div>
-        </div>
-        <div class="problem-card">
-          <div class="problem-icon">🧠</div>
-          <div>
-            <h4>Compatibility Logic Carried in Memory</h4>
-            <p>Who's managing the compatibility logic? Right now: the nurse. Alone. Under pressure. Without a system. LineMap changes that.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- FEATURES -->
-<section class="features-section" id="solution">
-  <div class="section-inner">
-    <div class="features-header reveal">
-      <span class="section-tag">The Solution</span>
-      <h2 class="section-headline">Compatibility. Capacity. <em>In real time.</em></h2>
-      <p class="section-body">LineMap gives every clinician a live, structured map of their patient's vascular access — with rules-based lumen assignment, compatibility checking, and safety alerts built in.</p>
-    </div>
-    <div class="features-grid reveal">
-      <div class="feature-card">
-        <div class="feature-number">01</div>
-        <div class="feature-dot-row"><div class="feature-dot"></div><h3>Body-Map Interaction Model</h3></div>
-        <p>Clinicians document line placement on an anatomical figure — making the interface feel like the patient, not a form. Spatial context is preserved across the care team.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-number">02</div>
-        <div class="feature-dot-row"><div class="feature-dot"></div><h3>Rules-Based Lumen Assignment</h3></div>
-        <p>LumenLogic™ assigns infusions to lumens based on compatibility, priority, and line type — reducing cognitive load and preventing assignment errors before they occur.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-number">03</div>
-        <div class="feature-dot-row"><div class="feature-dot"></div><h3>Real-Time Safety Alerts</h3></div>
-        <p>Incompatibility conflicts, rate threshold breaches, and line age alerts surface automatically — with OMO trauma-informed language for high-stress environments.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-number">04</div>
-        <div class="feature-dot-row"><div class="feature-dot"></div><h3>Patient Access Board</h3></div>
-        <p>A live unit-level view of every patient's access status — acuity tags, vesicant flags, capacity indicators — giving charge nurses a real-time operational picture.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-number">05</div>
-        <div class="feature-dot-row"><div class="feature-dot"></div><h3>Quick Check · Lumen Planner</h3></div>
-        <p>Emergency triage mode: enter all active medications and get a minimum lumen map instantly. Built for blown PIVs, rapid reassignment, and high-acuity moments.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-number">06</div>
-        <div class="feature-dot-row"><div class="feature-dot"></div><h3>EHR-Agnostic Architecture</h3></div>
-        <p>Deployable as a point-of-care overlay without requiring a full EHR replacement. HL7 FHIR compatible. Built to integrate with the systems already in place.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- HOW IT WORKS + SCREENSHOTS -->
-<section class="how-section" id="how">
-  <div class="section-inner">
-    <div class="how-grid">
-      <div class="reveal">
-        <span class="section-tag">How It Works</span>
-        <h2 class="section-headline">A system that <em>keeps up</em><br>with them.</h2>
-        <div class="how-steps">
-          <div class="how-step">
-            <span class="step-num">1</span>
-            <div>
-              <h4>View the Patient Access Board</h4>
-              <p>Open to a live unit view. Every patient's line count, active infusions, acuity status, and flags — all visible at a glance. No digging. No guessing.</p>
-            </div>
-          </div>
-          <div class="how-step">
-            <span class="step-num">2</span>
-            <div>
-              <h4>Select a Patient · Open the Body Map</h4>
-              <p>Tap the anatomical figure to mark insertion sites. LineMap captures location, line type, and lumen count — a live spatial record of every access point.</p>
-            </div>
-          </div>
-          <div class="how-step">
-            <span class="step-num">3</span>
-            <div>
-              <h4>Run LumenLogic™ Assignment</h4>
-              <p>Enter active medications. The engine recommends optimal lumen routing based on compatibility rules, vesicant status, and clinical priority.</p>
-            </div>
-          </div>
-          <div class="how-step">
-            <span class="step-num">4</span>
-            <div>
-              <h4>Quick Check for Urgent Situations</h4>
-              <p>Blown PIV? Rapid reassignment needed? Enter all meds and get the minimum lumen map in seconds. Drag chips to rearrange.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="app-screenshots reveal">
-        <div>
-          <div class="screenshot-label">Patient Access Board</div>
-          <div class="screenshot-frame">
-            <div class="screenshot-bar">
-              <div class="s-dot"></div><div class="s-dot"></div><div class="s-dot"></div>
-              <span class="s-title">LineMap · ICU View</span>
-            </div>
-            <img src="LMmockupdash.PNG" alt="LineMap Patient Access Board">
-          </div>
-        </div>
-        <div>
-          <div class="screenshot-label">Quick Check — Lumen Planner</div>
-          <div class="screenshot-frame">
-            <div class="screenshot-bar">
-              <div class="s-dot"></div><div class="s-dot"></div><div class="s-dot"></div>
-              <span class="s-title">LineMap · Lumen Planner</span>
-            </div>
-            <img src="LMmockup1.PNG" alt="LineMap Quick Check Lumen Planner">
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- BODY MAP -->
-<section class="bodymap-section">
-  <div class="section-inner">
-    <div class="bodymap-grid">
-      <div class="bodymap-figure-wrap reveal">
-        <img src="humanfigure.png" alt="LineMap body map patient figure">
-        <div class="map-pin pin-neck"></div>
-        <div class="map-pin pin-chest"></div>
-        <div class="map-pin pin-arm"></div>
-      </div>
-      <div class="reveal">
-        <span class="section-tag">Body-Map Interaction Model</span>
-        <h2 class="section-headline">The interface<br>feels like <em>the patient.</em></h2>
-        <p class="section-body">
-          Instead of forms and dropdowns, LineMap puts the patient's anatomy front and center. Clinicians tap insertion sites directly on the body figure — documenting line placement spatially, the way they already think about it at the bedside.
-        </p>
-        <p class="section-body" style="margin-top:1.2rem;">
-          This is not a data entry tool. It's a shared mental model — visible to every nurse, every shift, every handoff.
-        </p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- AUDIENCE TABS -->
-<section class="audience-section" id="audience">
-  <div class="section-inner">
-    <div class="audience-header reveal">
-      <span class="section-tag">Built for Everyone in the Room</span>
-      <h2 class="section-headline">One platform. <em>Three imperatives.</em></h2>
-    </div>
-    <div class="tab-nav reveal">
-      <button class="tab-btn active" onclick="switchTab('clinicians', this)">Clinicians</button>
-      <button class="tab-btn" onclick="switchTab('administrators', this)">Administrators</button>
-      <button class="tab-btn" onclick="switchTab('investors', this)">Investors</button>
-    </div>
-    <div id="tab-clinicians" class="tab-content active reveal">
-      <div>
-        <h3 class="section-headline" style="font-size:1.8rem;">Not a system that tells you what to do.<br><em>One that keeps up with you.</em></h3>
-        <ul class="tab-points">
-          <li>Replace mental math and paper diagrams with a live visual map of every line and lumen</li>
-          <li>Receive intelligent assignment recommendations — stop guessing, start confirming</li>
-          <li>Get context-aware alerts that speak your language, not alarm fatigue noise</li>
-          <li>Hand off with a complete, structured record — not a rushed verbal relay</li>
-          <li>Designed with OMO trauma-informed language for high-acuity clinical environments</li>
-        </ul>
-      </div>
-      <div class="tab-quote">
-        "Nurses are not failing patients. We are failing nurses. LineMap puts the right information in the right hands at the right moment."
-        <cite>— Jennifer Torrez, BSN, RN · Founder & CEO, PRISMqd</cite>
-      </div>
-    </div>
-    <div id="tab-administrators" class="tab-content reveal">
-      <div>
-        <h3 class="section-headline" style="font-size:1.8rem;">Reduce harm.<br><em>Reduce cost.</em></h3>
-        <ul class="tab-points">
-          <li>Target CLABSI and infusion-related adverse events at the point of origin</li>
-          <li>Generate structured documentation that supports compliance and audit readiness</li>
-          <li>Reduce nurse cognitive burden and contribute to retention in high-turnover units</li>
-          <li>EHR-agnostic deployment — no rip-and-replace, no lengthy implementation cycles</li>
-          <li>ROI-positive within the first quarter through error prevention and workflow efficiency</li>
-        </ul>
-      </div>
-      <div class="tab-quote">
-        "Every CLABSI costs a hospital $46,000. LineMap targets the moment it happens — the assignment decision — not after the fact."
-        <cite>— PRISMqd LineMap Clinical Brief, 2025</cite>
-      </div>
-    </div>
-    <div id="tab-investors" class="tab-content reveal">
-      <div>
-        <h3 class="section-headline" style="font-size:1.8rem;">Category-defining.<br><em>Pre-seed traction.</em></h3>
-        <ul class="tab-points">
-          <li>No direct competitor in structured IV line decision support — first-mover in a defined clinical gap</li>
-          <li>Provisional patent filed; trademark filings in progress for LineMap™ and LumenLogic™</li>
-          <li>Committed pilot site with physician champion and clinical systems engineering support</li>
-          <li>Part of PRISMqd's broader Failure to Rescue platform — $1.5M pre-seed raise underway</li>
-          <li>SBIR/AHRQ non-dilutive funding strategy actively in development</li>
-          <li>Founding team: 20+ years clinical, design, infrastructure, and operational expertise</li>
-        </ul>
-      </div>
-      <div class="tab-quote">
-        "PRISMqd is building the safety intelligence layer that healthcare systems don't yet know they can't operate without."
-        <cite>— PRISMqd Investor Brief, 2025</cite>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- SOCIAL POSTS -->
-<section class="social-section">
-  <div class="section-inner">
-    <div class="social-header reveal">
-      <span class="section-tag">From the Field</span>
-      <h2 class="section-headline">We built <em>something.</em></h2>
-      <p class="section-body" style="margin:0 auto;text-align:center;max-width:500px;">The questions that drove LineMap are the same ones every ICU nurse already knows.</p>
-    </div>
-    <div class="social-grid reveal">
-      <div class="social-post"><img src="The_system_never_existed.png" alt="The system never existed"></div>
-      <div class="social-post"><img src="compatibility_logic.png" alt="Who's managing the compatibility logic"></div>
-      <div class="social-post"><img src="a_system_that_keep_up.png" alt="A system that keeps up with them"></div>
-      <div class="social-post"><img src="we_built_something_2.png" alt="We built something"></div>
-    </div>
-  </div>
-</section>
-
-<!-- TRACTION -->
-<section class="pilot-section" id="pilot">
-  <div class="section-inner">
-    <div class="pilot-grid">
-      <div class="reveal">
-        <span class="section-tag">Traction & Validation</span>
-        <h2 class="section-headline">Built with clinicians.<br><em>Validated in practice.</em></h2>
-        <p class="section-body">LineMap was designed from the ground up by a practicing critical care nurse with 20+ years at the bedside — and refined with clinical systems engineers and physician champions. This is not a hypothesis. This is field intelligence turned into software.</p>
-        <button class="btn-primary" style="margin-top:2rem;" onclick="smoothScroll('contact')">Join the Pilot Program</button>
-      </div>
-      <div class="pilot-badges reveal">
-        <div class="pilot-badge">
-          <div class="badge-icon">🏥</div>
-          <div class="badge-text">
-            <h4>Committed Pilot Site</h4>
-            <p>Physician champion & clinical advisor engaged</p>
-          </div>
-        </div>
-        <div class="pilot-badge">
-          <div class="badge-icon">⚖️</div>
-          <div class="badge-text">
-            <h4>IP Protected</h4>
-            <p>Provisional patent filed · LineMap™ & LumenLogic™ trademarks in progress</p>
-          </div>
-        </div>
-        <div class="pilot-badge">
-          <div class="badge-icon">🔬</div>
-          <div class="badge-text">
-            <h4>Clinical Research Framework</h4>
-            <p>CRF, COVE-F, CMDS, PRRAA published on Zenodo</p>
-          </div>
-        </div>
-        <div class="pilot-badge">
-          <div class="badge-icon">💻</div>
-          <div class="badge-text">
-            <h4>Working Prototype Live</h4>
-            <p>Functional build deployed · Body-map interface operational</p>
-          </div>
-        </div>
-        <div class="pilot-badge">
-          <div class="badge-icon">📡</div>
-          <div class="badge-text">
-            <h4>Non-Dilutive Funding Strategy</h4>
-            <p>SBIR/AHRQ pathway actively in development</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- CTA FORM -->
-<section class="cta-section" id="contact">
-  <div class="cta-inner">
-    <div class="cta-logo-mark reveal">
-      <img src="logo.png" alt="LineMap">
-    </div>
-    <h2 class="cta-headline reveal">Ready to see<br><em>LineMap in action?</em></h2>
-    <p class="cta-body reveal">Whether you're a clinical leader, hospital administrator, or healthcare investor — we want to hear from you. Request a demo, join the pilot program, or start a conversation.</p>
-    <div class="cta-form reveal" id="cta-form">
-      <div class="form-row">
-        <input type="text" id="fname" placeholder="First Name">
-        <input type="text" id="lname" placeholder="Last Name">
-      </div>
-      <input type="email" id="email" placeholder="Email Address">
-      <input type="text" id="org" placeholder="Hospital / Organization / Firm">
-      <select id="role">
-        <option value="" disabled selected>I am a...</option>
-        <option value="clinician">Clinician / Nurse</option>
-        <option value="admin">Hospital Administrator / CNO / CMO</option>
-        <option value="investor">Healthcare Investor / VC</option>
-        <option value="researcher">Clinical Researcher</option>
-        <option value="other">Other</option>
-      </select>
-      <select id="interest">
-        <option value="" disabled selected>I'd like to...</option>
-        <option value="demo">Request a Demo</option>
-        <option value="pilot">Join the Pilot Program</option>
-        <option value="invest">Discuss Investment</option>
-        <option value="partnership">Explore Partnership</option>
-        <option value="info">Learn More</option>
-      </select>
-      <button type="button" onclick="submitForm()">Submit Request →</button>
-      <p class="form-note">Your information is never shared. We'll respond within 48 hours.</p>
-    </div>
-    <div class="form-success" id="form-success">
-      <h4>Request Received.</h4>
-      <p>Thank you. A member of the PRISMqd team will be in touch within 48 hours.</p>
-    </div>
-  </div>
-</section>
-
-<div class="gold-rule"></div>
-
-<!-- FOOTER -->
-<footer>
-  <div class="footer-brand">
-    <span>LineMap</span> · LineLogic Division · <span>PRISMqd</span>
-    <span class="footer-copy">© 2025 PRISMqd · All Rights Reserved · Patent Pending</span>
-  </div>
-  <ul class="footer-links">
-    <li><a href="https://prismqd.ai" target="_blank">prismqd.ai</a></li>
-    <li><a onclick="smoothScroll('contact')">Contact</a></li>
-    <li><a onclick="smoothScroll('pilot')">Pilot Program</a></li>
-  </ul>
-</footer>
-
-<script>
-  // Smooth scroll utility
-  function smoothScroll(id) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const top = el.getBoundingClientRect().top + window.pageYOffset - 80;
-    window.scrollTo({ top, behavior: 'smooth' });
-  }
-
-  // Scroll reveal
-  const revealEls = document.querySelectorAll('.reveal');
-  const revealObs = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        e.target.classList.add('visible');
-        revealObs.unobserve(e.target);
+  <head>
+    <meta charset="utf-8" />
+
+    <title>LineMap by PRISMqd | IV Line Safety Intelligence for Critical Care Units</title>
+
+    <meta
+      name="description"
+      content="LineMap by PRISMqd is a clinical decision support platform that maps IV lines, lumens, and infusions to reduce drug incompatibility errors, delays, and failure-to-rescue events in critical care."
+    />
+    <meta name="geo.placename" content="Lansing, Michigan, United States" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Open Graph / social -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="LineMap by PRISMqd" />
+    <meta
+      property="og:description"
+      content="Know the limits, not just the lines. LineMap brings IV line safety intelligence to your sickest patients and most complex regimens."
+    />
+    <meta property="og:image" content="/humanfigure-11.jpg" />
+
+    <!-- Basic reset / typography / layout -->
+    <style>
+      :root {
+        --lm-bg: #050814;
+        --lm-bg-alt: #0a101f;
+        --lm-surface: #111726;
+        --lm-surface-soft: #151d30;
+        --lm-accent: #f25c4c;
+        --lm-accent-soft: #ff8766;
+        --lm-gold: #e2c58a;
+        --lm-text: #f7f7f7;
+        --lm-text-soft: #c3cad9;
+        --lm-border-subtle: rgba(255, 255, 255, 0.12);
+        --lm-radius-lg: 1.5rem;
+        --lm-radius-xl: 1.9rem;
+        --lm-shadow-strong: 0 26px 60px rgba(0, 0, 0, 0.9);
       }
-    });
-  }, { threshold: 0.06 });
-  revealEls.forEach(el => revealObs.observe(el));
 
-  // Tab switching
-  function switchTab(id, btn) {
-    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('tab-' + id).classList.add('active');
-    btn.classList.add('active');
-  }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
 
-  // Form submit
-  async function submitForm() {
-    const fname = document.getElementById('fname').value.trim();
-    const email = document.getElementById('email').value.trim();
-    if (!fname) { document.getElementById('fname').style.borderColor = '#c9a84c'; }
-    if (!email) { document.getElementById('email').style.borderColor = '#c9a84c'; }
-    if (!fname || !email) return;
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: radial-gradient(circle at 0 0, #26324c 0, #050814 45%, #000 100%);
+        color: var(--lm-text);
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+          "Inter", "Segoe UI", sans-serif;
+      }
 
-    const data = {
-      name: fname + ' ' + document.getElementById('lname').value.trim(),
-      email,
-      organization: document.getElementById('org').value,
-      role: document.getElementById('role').value,
-      interest: document.getElementById('interest').value,
-    };
+      body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
 
-    try {
-      const res = await fetch('https://formspree.io/f/xbdpglvo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify(data)
-      });
-    } catch(e) {}
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
 
-    document.getElementById('cta-form').style.display = 'none';
-    document.getElementById('form-success').style.display = 'block';
-  }
-</script>
-</body>
+      img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      main {
+        flex: 1;
+      }
+
+      .shell {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 2.75rem 1.5rem 4rem;
+      }
+
+      @media (min-width: 900px) {
+        .shell {
+          padding: 3.25rem 2.5rem 4.75rem;
+        }
+      }
+    </style>
+
+    <!-- Header / nav -->
+    <style>
+      header.lm-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.75rem;
+        margin-bottom: 2.5rem;
+      }
+
+      .lm-brand {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .site-logo {
+        width: 40px;
+        height: 40px;
+      }
+
+      .lm-wordmark {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+      }
+
+      .lm-wordmark small {
+        font-size: 0.7rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--lm-text-soft);
+      }
+
+      .lm-wordmark span {
+        font-size: 0.95rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      nav.lm-nav {
+        display: flex;
+        align-items: center;
+        gap: 1.75rem;
+        font-size: 0.85rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--lm-text-soft);
+      }
+
+      nav.lm-nav a {
+        opacity: 0.8;
+      }
+
+      nav.lm-nav a:hover {
+        opacity: 1;
+        color: var(--lm-accent-soft);
+      }
+
+      .lm-pill-cta {
+        padding: 0.6rem 1.4rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        background: linear-gradient(
+          135deg,
+          rgba(242, 92, 76, 0.21),
+          rgba(242, 92, 76, 0.02)
+        );
+        color: var(--lm-text);
+        font-size: 0.8rem;
+      }
+
+      .lm-pill-cta span {
+        margin-left: 0.3rem;
+        font-size: 1rem;
+      }
+
+      @media (max-width: 720px) {
+        header.lm-header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        nav.lm-nav {
+          width: 100%;
+          justify-content: space-between;
+        }
+      }
+    </style>
+
+    <!-- Hero / body map / metrics -->
+    <style>
+      .hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+        gap: 2.75rem;
+        align-items: center;
+      }
+
+      @media (max-width: 880px) {
+        .hero-grid {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+
+      .hero-copy h1 {
+        font-size: clamp(2.5rem, 3.2vw + 1.8rem, 3.4rem);
+        line-height: 1.1;
+        margin: 0 0 1.35rem;
+        letter-spacing: 0.02em;
+      }
+
+      .hero-copy h1 span.accent {
+        color: var(--lm-gold);
+        font-family: "Times New Roman", "Georgia", serif;
+        font-style: italic;
+        font-weight: 500;
+      }
+
+      .hero-copy p.lead {
+        margin: 0 0 1.35rem;
+        max-width: 34rem;
+        color: var(--lm-text-soft);
+        font-size: 0.98rem;
+      }
+
+      .hero-copy p.sub {
+        margin: 0 0 1.5rem;
+        max-width: 34rem;
+        font-size: 0.95rem;
+        color: rgba(233, 236, 248, 0.78);
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem 1rem;
+        align-items: center;
+        margin-bottom: 1.4rem;
+      }
+
+      .btn-primary {
+        padding: 0.85rem 1.75rem;
+        border-radius: 999px;
+        border: none;
+        cursor: pointer;
+        font-size: 0.95rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        background: linear-gradient(135deg, #f25c4c, #ff9a6a);
+        color: #050814;
+        box-shadow: 0 14px 40px rgba(0, 0, 0, 0.8);
+      }
+
+      .btn-ghost {
+        padding: 0.8rem 1.5rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.24);
+        background: rgba(3, 6, 16, 0.75);
+        color: var(--lm-text);
+        font-size: 0.9rem;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        cursor: pointer;
+      }
+
+      .hero-footnote {
+        font-size: 0.8rem;
+        color: var(--lm-text-soft);
+        max-width: 29rem;
+      }
+
+      .hero-footnote strong {
+        color: var(--lm-accent-soft);
+      }
+
+      .hero-visual {
+        display: flex;
+        justify-content: center;
+      }
+
+      .body-map-shell {
+        position: relative;
+        display: inline-block;
+        padding: 1.6rem 1.9rem 1.7rem;
+        border-radius: var(--lm-radius-xl);
+        background:
+          radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.25), transparent 60%),
+          linear-gradient(145deg, #0d152c, #050814);
+        box-shadow: var(--lm-shadow-strong);
+      }
+
+      .body-map-shell::before {
+        content: "";
+        position: absolute;
+        inset: 14% 11%;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        box-shadow: 0 0 0 1px rgba(1, 4, 9, 0.7) inset;
+        pointer-events: none;
+      }
+
+      .body-map {
+        position: relative;
+      }
+
+      .body-map img {
+        display: block;
+        max-width: 260px;
+        filter: drop-shadow(0 0 18px rgba(0, 0, 0, 0.9));
+      }
+
+      .access-dot {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        width: 9px;
+        height: 9px;
+        border-radius: 999px;
+        background: #ff8766;
+        box-shadow: 0 0 10px rgba(242, 92, 76, 0.95);
+      }
+
+      .hero-metrics {
+        margin-top: 1.6rem;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.85rem;
+      }
+
+      @media (max-width: 900px) {
+        .hero-metrics {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 540px) {
+        .hero-metrics {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+
+      .metric-card {
+        padding: 0.85rem 0.95rem;
+        border-radius: 0.95rem;
+        background: rgba(4, 8, 20, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+      }
+
+      .metric-label {
+        font-size: 0.7rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: rgba(232, 238, 255, 0.7);
+        margin-bottom: 0.3rem;
+      }
+
+      .metric-value {
+        font-size: 0.96rem;
+        font-weight: 600;
+        margin-bottom: 0.1rem;
+      }
+
+      .metric-note {
+        font-size: 0.78rem;
+        color: var(--lm-text-soft);
+      }
+    </style>
+
+    <!-- Sections / cards / form -->
+    <style>
+      section {
+        margin-top: 3.5rem;
+      }
+
+      section h2 {
+        font-size: 1.3rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: rgba(230, 235, 255, 0.85);
+        margin-bottom: 1.2rem;
+      }
+
+      section h3 {
+        font-size: 1.2rem;
+        margin: 0 0 0.75rem;
+      }
+
+      section p {
+        font-size: 0.95rem;
+        color: var(--lm-text-soft);
+        max-width: 44rem;
+      }
+
+      .section-shell {
+        border-radius: var(--lm-radius-lg);
+        background: radial-gradient(circle at 0 0, rgba(242, 92, 76, 0.2), transparent 48%),
+          radial-gradient(circle at 100% 0, rgba(226, 197, 138, 0.25), transparent 55%),
+          linear-gradient(165deg, rgba(5, 10, 22, 0.98), rgba(3, 6, 16, 0.98));
+        padding: 1.75rem 1.7rem 1.8rem;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+      }
+
+      .section-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+        gap: 2rem;
+        align-items: flex-start;
+      }
+
+      @media (max-width: 880px) {
+        .section-grid {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+
+      .pill-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.18rem 0.7rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        font-size: 0.7rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: rgba(232, 238, 255, 0.85);
+      }
+
+      .problem-list {
+        margin: 0.9rem 0 0;
+        padding-left: 1.1rem;
+      }
+
+      .problem-list li {
+        font-size: 0.9rem;
+        color: var(--lm-text-soft);
+        margin-bottom: 0.4rem;
+      }
+
+      .stat-callout {
+        margin-top: 1rem;
+        padding: 0.9rem 1rem;
+        border-radius: 0.9rem;
+        background: rgba(2, 6, 16, 0.92);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        font-size: 0.85rem;
+        color: rgba(232, 238, 255, 0.86);
+      }
+
+      .stat-callout em {
+        color: var(--lm-accent-soft);
+        font-style: normal;
+      }
+
+      .whisper {
+        margin-top: 0.85rem;
+        font-size: 0.9rem;
+        color: #f25c4c;
+        max-width: 42rem;
+      }
+
+      .solution-points {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.2rem;
+        margin-top: 1.1rem;
+      }
+
+      @media (max-width: 720px) {
+        .solution-points {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+
+      .solution-card {
+        padding: 1rem 1rem;
+        border-radius: 0.95rem;
+        background: rgba(7, 10, 22, 0.95);
+        border: 1px solid var(--lm-border-subtle);
+      }
+
+      .solution-card h4 {
+        margin: 0 0 0.5rem;
+        font-size: 0.98rem;
+      }
+
+      .solution-card p {
+        margin: 0;
+        font-size: 0.9rem;
+      }
+
+      .how-steps {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1.2rem;
+        margin-top: 1rem;
+      }
+
+      @media (max-width: 900px) {
+        .how-steps {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 640px) {
+        .how-steps {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+
+      .how-step {
+        padding: 0.95rem 1rem;
+        border-radius: 0.95rem;
+        background: rgba(4, 9, 20, 0.96);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+      }
+
+      .how-step span.step-label {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.45);
+        font-size: 0.75rem;
+        margin-bottom: 0.45rem;
+      }
+
+      .traction-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+
+      @media (max-width: 880px) {
+        .traction-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 600px) {
+        .traction-grid {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+
+      .traction-item {
+        padding: 0.9rem 1rem;
+        border-radius: 0.9rem;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(5, 10, 24, 0.95);
+        font-size: 0.86rem;
+      }
+
+      .traction-item strong {
+        display: block;
+        margin-bottom: 0.25rem;
+        color: rgba(244, 244, 255, 0.95);
+      }
+
+      .contact-card {
+        margin-top: 1.1rem;
+        padding: 1.1rem 1.1rem 1.2rem;
+        border-radius: 1rem;
+        background: rgba(7, 12, 26, 0.96);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+      }
+
+      .contact-card form {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.9rem 1rem;
+      }
+
+      .contact-card label {
+        font-size: 0.78rem;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: rgba(230, 234, 248, 0.78);
+        display: block;
+        margin-bottom: 0.25rem;
+      }
+
+      .contact-card input,
+      .contact-card textarea {
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        border-radius: 0.6rem;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        background: rgba(2, 5, 14, 0.95);
+        color: var(--lm-text);
+        font-size: 0.9rem;
+        font-family: inherit;
+      }
+
+      .contact-card textarea {
+        min-height: 110px;
+        resize: vertical;
+      }
+
+      .contact-card .field-full {
+        grid-column: 1 / -1;
+      }
+
+      .contact-footer {
+        margin-top: 0.9rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+      }
+
+      .contact-footer p {
+        margin: 0;
+        font-size: 0.8rem;
+        color: var(--lm-text-soft);
+      }
+
+      footer {
+        padding: 1.75rem 1.5rem 2.25rem;
+        font-size: 0.78rem;
+        color: rgba(204, 210, 230, 0.75);
+        text-align: center;
+      }
+    </style>
+  </head>
+
+  <body>
+    <main>
+      <div class="shell">
+        <!-- Header -->
+        <header class="lm-header">
+          <div class="lm-brand">
+            <picture>
+              <source srcset="logo-blue-4.svg" media="(prefers-color-scheme: dark)" />
+              <source srcset="logo-black-3.svg" media="(prefers-color-scheme: light)" />
+              <img
+                src="logo-blue-4.svg"
+                alt="PRISMqd LineMap logo"
+                class="site-logo"
+              />
+            </picture>
+            <div class="lm-wordmark">
+              <small>PRISMqd · LineLogic</small>
+              <span>LineMap</span>
+            </div>
+          </div>
+
+          <nav class="lm-nav">
+            <a href="#problem">Problem</a>
+            <a href="#solution">Solution</a>
+            <a href="#how">How it works</a>
+            <a href="#traction">Traction</a>
+            <a href="#contact" class="lm-pill-cta">
+              Request access <span>→</span>
+            </a>
+          </nav>
+        </header>
+
+        <!-- Hero -->
+        <section aria-labelledby="hero-heading">
+          <div class="hero-grid">
+            <div class="hero-copy">
+              <h1 id="hero-heading">
+                Know the <span class="accent">limits</span>.<br />Not just the lines.
+              </h1>
+              <p class="lead">
+                LineMap is the first clinical decision support tool purpose‑built for IV
+                line and infusion safety – giving nurses a live, structured map of every
+                lumen, every infusion, and every constraint in one place.
+              </p>
+              <p class="sub">
+                Instead of manual compatibility checks, scattered notes, and
+                last‑minute guesses under pressure, LineMap keeps a shared, real‑time
+                picture of vascular access for the whole care team.
+              </p>
+
+              <div class="hero-actions">
+                <button class="btn-primary">Request pilot access</button>
+                <button class="btn-ghost">View quick‑check demo</button>
+              </div>
+
+              <p class="hero-footnote">
+                <strong>Designed by a practicing critical care nurse</strong> and
+                refined with clinical systems engineers – bedside reality, translated
+                into software.
+              </p>
+
+              <div class="hero-metrics">
+                <div class="metric-card">
+                  <div class="metric-label">IV workflow risk</div>
+                  <div class="metric-value">High‑risk by design</div>
+                  <div class="metric-note">
+                    IV meds concentrate complexity – sickest patients, most fragile
+                    access, most time‑critical therapies.
+                  </div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Observed reality</div>
+                  <div class="metric-value">10–40% error bands</div>
+                  <div class="metric-note">
+                    Direct‑observation studies show a significant share of IV
+                    administrations include preparation or administration problems.
+                  </div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Reporting gap</div>
+                  <div class="metric-value">Most events invisible</div>
+                  <div class="metric-note">
+                    Only a fraction of errors are formally reported – the operational
+                    and liability impact is widely under‑counted.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Body map visual -->
+            <div class="hero-visual" aria-hidden="true">
+              <div class="body-map-shell">
+                <div class="body-map">
+                  <img
+                    src="humanfigure-11.jpg"
+                    alt="Neutral full-body silhouette used for mapping vascular access"
+                  />
+                  <!-- Neck access dot (left side of neck) -->
+                  <div class="access-dot" style="top: 19%; left: 47%;"></div>
+                  <!-- Upper arm access dot (left upper arm) -->
+                  <div class="access-dot" style="top: 38%; left: 36%;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Problem -->
+        <section id="problem">
+          <div class="section-shell">
+            <span class="pill-tag">The problem</span>
+            <h2>IV line safety lives in workarounds</h2>
+
+            <p>
+              At the bedside today, compatibility logic, lumen capacity, and line risk
+              all live in nurses’ heads, external reference sites, and improvised
+              notes. In a crisis, teams burn time logging into the EHR, drilling down
+              to the MAR, and running one‑to‑one checks across dozens of combinations –
+              while a blown line or unstable patient cannot wait.
+            </p>
+
+            <ul class="problem-list">
+              <li>
+                No single source of truth for vascular access – clinicians mentally
+                track where each infusion is running and why.
+              </li>
+              <li>
+                Compatibility logic lives in external reference sites, partial memory,
+                and hurried phone calls, not in the workflow itself.
+              </li>
+              <li>
+                EHRs capture orders, but not actual access topology or lumen
+                assignments – there is no map of “what is running where.”
+              </li>
+              <li>
+                In an emergency, nurses can spend minutes navigating and cross‑checking
+                instead of immediately routing safe, compatible therapy.
+              </li>
+            </ul>
+
+            <div class="stat-callout">
+              Direct‑observation research has found that a meaningful proportion of IV
+              doses involve at least one error in preparation or administration, and
+              several meta‑analyses estimate combined IV preparation/administration
+              error prevalence above <em>40%</em> in some settings. At the same time,
+              multiple studies show that only a minority of medication errors are ever
+              formally reported, meaning the visible data represent only a slice of the
+              actual burden on patients, clinicians, and systems.
+            </div>
+
+            <p class="whisper">
+              Pssst… the scary part isn’t just the 10–40% error rates in observed IV
+              administrations – it’s how little of the real picture those observations
+              touch. Only a thin slice of doses are ever directly watched, and even
+              fewer events make it into incident reports. If a big chunk of that tiny
+              visible slice is problematic, the true volume of near misses, delayed
+              meds, and quiet failures to rescue is far bigger than any dashboard is
+              showing you right now.
+            </p>
+          </div>
+        </section>
+
+        <!-- Solution -->
+        <section id="solution">
+          <div class="section-shell">
+            <span class="pill-tag">The solution</span>
+            <h2>Structured intelligence for IV access</h2>
+
+            <div class="section-grid">
+              <div>
+                <p>
+                  LineMap gives clinicians a live, shared map of each patient’s
+                  vascular access, infusions, and constraints – so compatibility logic,
+                  lumen capacity, and risk signals are handled by the system, not left
+                  to memory and multi‑tab workarounds.
+                </p>
+
+                <div class="solution-points">
+                  <div class="solution-card">
+                    <h4>Vascular access, mapped</h4>
+                    <p>
+                      Nurses document line placement directly on an anatomical figure,
+                      preserving spatial context and making the interface feel like the
+                      patient, not a form.
+                    </p>
+                  </div>
+
+                  <div class="solution-card">
+                    <h4>LumenLogic™ engine</h4>
+                    <p>
+                      Infusions are assigned to lumens based on compatibility,
+                      vesicant status, priority, and line type – reducing cognitive
+                      load and catching conflicts before they reach the patient.
+                    </p>
+                  </div>
+
+                  <div class="solution-card">
+                    <h4>Unit‑level situational awareness</h4>
+                    <p>
+                      Charge nurses see a live board of every patient’s access status,
+                      flags, and acuity – supporting staffing, escalation decisions,
+                      and rapid reassignment in high‑pressure moments.
+                    </p>
+                  </div>
+
+                  <div class="solution-card">
+                    <h4>Built for emergencies</h4>
+                    <p>
+                      Quick‑check mode lets clinicians enter all active medications and
+                      generate a minimum‑lumen map in seconds – built for blown PIVs,
+                      rapid reassignment, and code‑level events.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <img
+                  src="LMmockup1.jpg"
+                  alt="LineMap interface showing patient access board with IV lines, acuity tags, and infusion status"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- How it works -->
+        <section id="how">
+          <div class="section-shell">
+            <span class="pill-tag">How it works</span>
+            <h2>From blown line to safe routing in one workflow</h2>
+
+            <div class="section-grid">
+              <div>
+                <p>
+                  LineMap is designed as a point‑of‑care overlay that works alongside
+                  your existing EHR. Clinicians interact with a mapped view of vascular
+                  access while the engine handles compatibility, capacity, and routing
+                  behind the scenes.
+                </p>
+
+                <div class="how-steps">
+                  <div class="how-step">
+                    <span class="step-label">1</span>
+                    <h3>Capture the access reality</h3>
+                    <p>
+                      Tap insertion sites on the body figure to document line type,
+                      lumen count, and key attributes like central vs. peripheral,
+                      dedicated lumens, and vesicant‑only access.
+                    </p>
+                  </div>
+
+                  <div class="how-step">
+                    <span class="step-label">2</span>
+                    <h3>Map the infusions</h3>
+                    <p>
+                      Enter active medications; LumenLogic™ recommends optimal lumen
+                      assignments based on compatibility data, vesicant status, and
+                      clinical priority – flagging conflicts and rate thresholds in
+                      real time.
+                    </p>
+                  </div>
+
+                  <div class="how-step">
+                    <span class="step-label">3</span>
+                    <h3>Use quick‑check in crisis</h3>
+                    <p>
+                      In emergency mode, clinicians can enter all meds that need a
+                      home, then drag‑and‑drop to finalize a minimum‑lumen plan – so
+                      they can move from blown line to safe, compatible routing without
+                      leaving the bedside.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <img
+                  src="LMmockupdash-2.jpg"
+                  alt="LineMap lumen planner quick-check interface with medications entered and minimum lumen map generated"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Traction -->
+        <section id="traction">
+          <div class="section-shell">
+            <span class="pill-tag">Traction</span>
+            <h2>Built from bedside reality, moving toward scale</h2>
+
+            <div class="traction-grid">
+              <div class="traction-item">
+                <strong>Field‑driven design</strong>
+                Designed by a practicing critical care nurse with 20+ years at the
+                bedside, refined with clinical systems engineers and physician
+                champions.
+              </div>
+              <div class="traction-item">
+                <strong>Intellectual property</strong>
+                Provisional patent filed; LineMap™ and LumenLogic™ marks in process;
+                clinical frameworks (CRF, COVE‑F, CMDS, PRRAA) published on Zenodo.
+              </div>
+              <div class="traction-item">
+                <strong>Functional build deployed</strong>
+                Operational prototype with body‑map interface and lumen‑planning
+                logic; SBIR/AHRQ pathway actively in development.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Contact -->
+        <section id="contact">
+          <div class="section-shell">
+            <span class="pill-tag">Next steps</span>
+            <h2>Early access for clinical leaders and partners</h2>
+
+            <p>
+              Whether you are a clinical leader, hospital administrator, quality and
+              safety lead, or healthcare investor, we are assembling a focused group
+              of early sites and partners to shape LineMap’s next phase. Tell us a bit
+              about your unit and priorities, and we will follow up with a short,
+              targeted conversation – no generic sales sequence.
+            </p>
+
+            <div class="contact-card">
+              <form>
+                <div>
+                  <label for="name">Name</label>
+                  <input id="name" type="text" name="name" />
+                </div>
+                <div>
+                  <label for="org">Organization</label>
+                  <input id="org" type="text" name="organization" />
+                </div>
+                <div>
+                  <label for="role">Role</label>
+                  <input id="role" type="text" name="role" />
+                </div>
+                <div>
+                  <label for="email">Email</label>
+                  <input id="email" type="email" name="email" />
+                </div>
+                <div class="field-full">
+                  <label for="message">Focus area</label>
+                  <textarea
+                    id="message"
+                    name="message"
+                    placeholder="Tell us about your IV workflows, where you see risk today, and what a successful pilot would need to prove."
+                  ></textarea>
+                </div>
+              </form>
+
+              <div class="contact-footer">
+                <button class="btn-primary">Request a conversation</button>
+                <p>Your information is never shared. We respond within 48 hours.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer>
+      LineMap · PRISMqd LineLogic · IV Line Safety Intelligence · All rights reserved.
+    </footer>
+  </body>
 </html>
