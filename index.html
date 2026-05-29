@@ -199,7 +199,7 @@ h3 {
 }
 
 /* ── Nav ── */
-nav {
+#nav {
   position: fixed;
   top: 0; width: 100%;
   z-index: 1000;
@@ -213,11 +213,11 @@ nav {
   border-bottom: 1px solid rgba(196,169,77,0.1);
   transition: border-color 0.4s, background 0.4s;
 }
-nav.scrolled {
+#nav.scrolled {
   background: rgba(6,12,26,0.97);
   border-bottom-color: rgba(196,169,77,0.22);
 }
-.nav-logo { height: 30px; width: auto; }
+.nav-logo { height: 30px; width: auto; mix-blend-mode: screen; }
 .nav-links { display: flex; align-items: center; gap: 28px; }
 .nav-links a {
   text-decoration: none;
@@ -744,7 +744,7 @@ footer {
   display: flex; justify-content: space-between; align-items: center;
   flex-wrap: wrap; gap: 20px;
 }
-.ft-logo img { height: 24px; opacity: 0.45; transition: opacity 0.2s; }
+.ft-logo img { height: 24px; opacity: 0.45; mix-blend-mode: screen; transition: opacity 0.2s; }
 .ft-logo img:hover { opacity: 0.7; }
 .ft-copy {
   font-family: 'DM Mono', monospace;
@@ -849,7 +849,7 @@ footer {
   .cta-inner-wrap { grid-template-columns: 1fr; gap: 44px; }
   .fld-row { grid-template-columns: 1fr; }
   .phones-row { flex-direction: column; align-items: center; gap: 48px; }
-  nav { padding: 14px 5%; }
+  #nav { padding: 14px 5%; }
   .hero { padding: 120px 6% 80px; }
   .steps { grid-template-columns: 1fr 1fr; }
   .phone:hover { transform: none; }
@@ -1348,7 +1348,7 @@ footer {
     </a>
   </div>
   <p class="ft-copy">© 2025 PRISMqd · LineMap™ · LineLogic™ · All rights reserved</p>
-  <nav class="ft-links" aria-label="Footer links">
+  <div class="ft-links" role="navigation" aria-label="Footer links">
     <a href="https://prismqd.ai" target="_blank" rel="noopener noreferrer">PRISMqd.ai</a>
     <span class="ft-sep" aria-hidden="true">·</span>
     <a href="https://www.linkedin.com/company/prismqd"
@@ -1368,7 +1368,7 @@ footer {
             aria-haspopup="dialog">
       Privacy Policy
     </button>
-  </nav>
+  </div>
 </footer>
 
 <script>
