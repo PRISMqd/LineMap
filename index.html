@@ -1,992 +1,1486 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-
-    <title>LineMap by PRISMqd | IV Line Safety Intelligence for Critical Care Units</title>
-
-    <meta
-      name="description"
-      content="LineMap by PRISMqd is a clinical decision support platform that maps IV lines, lumens, and infusions to reduce drug incompatibility errors, delays, and failure-to-rescue events in critical care."
-    />
-    <meta name="geo.placename" content="Lansing, Michigan, United States" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-    <!-- Open Graph / social -->
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="LineMap by PRISMqd" />
-    <meta
-      property="og:description"
-      content="Know the limits, not just the lines. LineMap brings IV line safety intelligence to your sickest patients and most complex regimens."
-    />
-    <meta property="og:image" content="/humanfigure-11.jpg" />
-
-    <!-- Basic reset / typography / layout -->
-    <style>
-      :root {
-        --lm-bg: #050814;
-        --lm-bg-alt: #0a101f;
-        --lm-surface: #111726;
-        --lm-surface-soft: #151d30;
-        --lm-accent: #f25c4c;
-        --lm-accent-soft: #ff8766;
-        --lm-gold: #e2c58a;
-        --lm-text: #f7f7f7;
-        --lm-text-soft: #c3cad9;
-        --lm-border-subtle: rgba(255, 255, 255, 0.12);
-        --lm-radius-lg: 1.5rem;
-        --lm-radius-xl: 1.9rem;
-        --lm-shadow-strong: 0 26px 60px rgba(0, 0, 0, 0.9);
-      }
-
-      *,
-      *::before,
-      *::after {
-        box-sizing: border-box;
-      }
-
-      html,
-      body {
-        margin: 0;
-        padding: 0;
-        background: radial-gradient(circle at 0 0, #26324c 0, #050814 45%, #000 100%);
-        color: var(--lm-text);
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
-          "Inter", "Segoe UI", sans-serif;
-      }
-
-      body {
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-      }
-
-      a {
-        color: inherit;
-        text-decoration: none;
-      }
-
-      img {
-        max-width: 100%;
-        height: auto;
-        display: block;
-      }
-
-      main {
-        flex: 1;
-      }
-
-      .shell {
-        max-width: 1120px;
-        margin: 0 auto;
-        padding: 2.75rem 1.5rem 4rem;
-      }
-
-      @media (min-width: 900px) {
-        .shell {
-          padding: 3.25rem 2.5rem 4.75rem;
-        }
-      }
-    </style>
-
-    <!-- Header / nav -->
-    <style>
-      header.lm-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1.75rem;
-        margin-bottom: 2.5rem;
-      }
-
-      .lm-brand {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-      }
-
-      .site-logo {
-        width: 40px;
-        height: 40px;
-      }
-
-      .lm-wordmark {
-        display: flex;
-        flex-direction: column;
-        gap: 0.15rem;
-      }
-
-      .lm-wordmark small {
-        font-size: 0.7rem;
-        letter-spacing: 0.16em;
-        text-transform: uppercase;
-        color: var(--lm-text-soft);
-      }
-
-      .lm-wordmark span {
-        font-size: 0.95rem;
-        letter-spacing: 0.16em;
-        text-transform: uppercase;
-      }
-
-      nav.lm-nav {
-        display: flex;
-        align-items: center;
-        gap: 1.75rem;
-        font-size: 0.85rem;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-        color: var(--lm-text-soft);
-      }
-
-      nav.lm-nav a {
-        opacity: 0.8;
-      }
-
-      nav.lm-nav a:hover {
-        opacity: 1;
-        color: var(--lm-accent-soft);
-      }
-
-      .lm-pill-cta {
-        padding: 0.6rem 1.4rem;
-        border-radius: 999px;
-        border: 1px solid rgba(255, 255, 255, 0.25);
-        background: linear-gradient(
-          135deg,
-          rgba(242, 92, 76, 0.21),
-          rgba(242, 92, 76, 0.02)
-        );
-        color: var(--lm-text);
-        font-size: 0.8rem;
-      }
-
-      .lm-pill-cta span {
-        margin-left: 0.3rem;
-        font-size: 1rem;
-      }
-
-      @media (max-width: 720px) {
-        header.lm-header {
-          flex-direction: column;
-          align-items: flex-start;
-        }
-
-        nav.lm-nav {
-          width: 100%;
-          justify-content: space-between;
-        }
-      }
-    </style>
-
-    <!-- Hero / body map / metrics -->
-    <style>
-      .hero-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-        gap: 2.75rem;
-        align-items: center;
-      }
-
-      @media (max-width: 880px) {
-        .hero-grid {
-          grid-template-columns: minmax(0, 1fr);
-        }
-      }
-
-      .hero-copy h1 {
-        font-size: clamp(2.5rem, 3.2vw + 1.8rem, 3.4rem);
-        line-height: 1.1;
-        margin: 0 0 1.35rem;
-        letter-spacing: 0.02em;
-      }
-
-      .hero-copy h1 span.accent {
-        color: var(--lm-gold);
-        font-family: "Times New Roman", "Georgia", serif;
-        font-style: italic;
-        font-weight: 500;
-      }
-
-      .hero-copy p.lead {
-        margin: 0 0 1.35rem;
-        max-width: 34rem;
-        color: var(--lm-text-soft);
-        font-size: 0.98rem;
-      }
-
-      .hero-copy p.sub {
-        margin: 0 0 1.5rem;
-        max-width: 34rem;
-        font-size: 0.95rem;
-        color: rgba(233, 236, 248, 0.78);
-      }
-
-      .hero-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.75rem 1rem;
-        align-items: center;
-        margin-bottom: 1.4rem;
-      }
-
-      .btn-primary {
-        padding: 0.85rem 1.75rem;
-        border-radius: 999px;
-        border: none;
-        cursor: pointer;
-        font-size: 0.95rem;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        background: linear-gradient(135deg, #f25c4c, #ff9a6a);
-        color: #050814;
-        box-shadow: 0 14px 40px rgba(0, 0, 0, 0.8);
-      }
-
-      .btn-ghost {
-        padding: 0.8rem 1.5rem;
-        border-radius: 999px;
-        border: 1px solid rgba(255, 255, 255, 0.24);
-        background: rgba(3, 6, 16, 0.75);
-        color: var(--lm-text);
-        font-size: 0.9rem;
-        letter-spacing: 0.07em;
-        text-transform: uppercase;
-        cursor: pointer;
-      }
-
-      .hero-footnote {
-        font-size: 0.8rem;
-        color: var(--lm-text-soft);
-        max-width: 29rem;
-      }
-
-      .hero-footnote strong {
-        color: var(--lm-accent-soft);
-      }
-
-      .hero-visual {
-        display: flex;
-        justify-content: center;
-      }
-
-      .body-map-shell {
-        position: relative;
-        display: inline-block;
-        padding: 1.6rem 1.9rem 1.7rem;
-        border-radius: var(--lm-radius-xl);
-        background:
-          radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.25), transparent 60%),
-          linear-gradient(145deg, #0d152c, #050814);
-        box-shadow: var(--lm-shadow-strong);
-      }
-
-      .body-map-shell::before {
-        content: "";
-        position: absolute;
-        inset: 14% 11%;
-        border-radius: 999px;
-        border: 1px solid rgba(255, 255, 255, 0.16);
-        box-shadow: 0 0 0 1px rgba(1, 4, 9, 0.7) inset;
-        pointer-events: none;
-      }
-
-      .body-map {
-        position: relative;
-      }
-
-      .body-map img {
-        display: block;
-        max-width: 260px;
-        filter: drop-shadow(0 0 18px rgba(0, 0, 0, 0.9));
-      }
-
-      .access-dot {
-        position: absolute;
-        transform: translate(-50%, -50%);
-        pointer-events: none;
-        width: 9px;
-        height: 9px;
-        border-radius: 999px;
-        background: #ff8766;
-        box-shadow: 0 0 10px rgba(242, 92, 76, 0.95);
-      }
-
-      .hero-metrics {
-        margin-top: 1.6rem;
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 0.85rem;
-      }
-
-      @media (max-width: 900px) {
-        .hero-metrics {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-      }
-
-      @media (max-width: 540px) {
-        .hero-metrics {
-          grid-template-columns: minmax(0, 1fr);
-        }
-      }
-
-      .metric-card {
-        padding: 0.85rem 0.95rem;
-        border-radius: 0.95rem;
-        background: rgba(4, 8, 20, 0.9);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-      }
-
-      .metric-label {
-        font-size: 0.7rem;
-        letter-spacing: 0.15em;
-        text-transform: uppercase;
-        color: rgba(232, 238, 255, 0.7);
-        margin-bottom: 0.3rem;
-      }
-
-      .metric-value {
-        font-size: 0.96rem;
-        font-weight: 600;
-        margin-bottom: 0.1rem;
-      }
-
-      .metric-note {
-        font-size: 0.78rem;
-        color: var(--lm-text-soft);
-      }
-    </style>
-
-    <!-- Sections / cards / form -->
-    <style>
-      section {
-        margin-top: 3.5rem;
-      }
-
-      section h2 {
-        font-size: 1.3rem;
-        letter-spacing: 0.16em;
-        text-transform: uppercase;
-        color: rgba(230, 235, 255, 0.85);
-        margin-bottom: 1.2rem;
-      }
-
-      section h3 {
-        font-size: 1.2rem;
-        margin: 0 0 0.75rem;
-      }
-
-      section p {
-        font-size: 0.95rem;
-        color: var(--lm-text-soft);
-        max-width: 44rem;
-      }
-
-      .section-shell {
-        border-radius: var(--lm-radius-lg);
-        background: radial-gradient(circle at 0 0, rgba(242, 92, 76, 0.2), transparent 48%),
-          radial-gradient(circle at 100% 0, rgba(226, 197, 138, 0.25), transparent 55%),
-          linear-gradient(165deg, rgba(5, 10, 22, 0.98), rgba(3, 6, 16, 0.98));
-        padding: 1.75rem 1.7rem 1.8rem;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-      }
-
-      .section-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-        gap: 2rem;
-        align-items: flex-start;
-      }
-
-      @media (max-width: 880px) {
-        .section-grid {
-          grid-template-columns: minmax(0, 1fr);
-        }
-      }
-
-      .pill-tag {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        padding: 0.18rem 0.7rem;
-        border-radius: 999px;
-        border: 1px solid rgba(255, 255, 255, 0.28);
-        font-size: 0.7rem;
-        letter-spacing: 0.16em;
-        text-transform: uppercase;
-        color: rgba(232, 238, 255, 0.85);
-      }
-
-      .problem-list {
-        margin: 0.9rem 0 0;
-        padding-left: 1.1rem;
-      }
-
-      .problem-list li {
-        font-size: 0.9rem;
-        color: var(--lm-text-soft);
-        margin-bottom: 0.4rem;
-      }
-
-      .stat-callout {
-        margin-top: 1rem;
-        padding: 0.9rem 1rem;
-        border-radius: 0.9rem;
-        background: rgba(2, 6, 16, 0.92);
-        border: 1px solid rgba(255, 255, 255, 0.16);
-        font-size: 0.85rem;
-        color: rgba(232, 238, 255, 0.86);
-      }
-
-      .stat-callout em {
-        color: var(--lm-accent-soft);
-        font-style: normal;
-      }
-
-      .whisper {
-        margin-top: 0.85rem;
-        font-size: 0.9rem;
-        color: #f25c4c;
-        max-width: 42rem;
-      }
-
-      .solution-points {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 1.2rem;
-        margin-top: 1.1rem;
-      }
-
-      @media (max-width: 720px) {
-        .solution-points {
-          grid-template-columns: minmax(0, 1fr);
-        }
-      }
-
-      .solution-card {
-        padding: 1rem 1rem;
-        border-radius: 0.95rem;
-        background: rgba(7, 10, 22, 0.95);
-        border: 1px solid var(--lm-border-subtle);
-      }
-
-      .solution-card h4 {
-        margin: 0 0 0.5rem;
-        font-size: 0.98rem;
-      }
-
-      .solution-card p {
-        margin: 0;
-        font-size: 0.9rem;
-      }
-
-      .how-steps {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 1.2rem;
-        margin-top: 1rem;
-      }
-
-      @media (max-width: 900px) {
-        .how-steps {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-      }
-
-      @media (max-width: 640px) {
-        .how-steps {
-          grid-template-columns: minmax(0, 1fr);
-        }
-      }
-
-      .how-step {
-        padding: 0.95rem 1rem;
-        border-radius: 0.95rem;
-        background: rgba(4, 9, 20, 0.96);
-        border: 1px solid rgba(255, 255, 255, 0.14);
-      }
-
-      .how-step span.step-label {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 20px;
-        height: 20px;
-        border-radius: 999px;
-        border: 1px solid rgba(255, 255, 255, 0.45);
-        font-size: 0.75rem;
-        margin-bottom: 0.45rem;
-      }
-
-      .traction-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 1rem;
-        margin-top: 1rem;
-      }
-
-      @media (max-width: 880px) {
-        .traction-grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-      }
-
-      @media (max-width: 600px) {
-        .traction-grid {
-          grid-template-columns: minmax(0, 1fr);
-        }
-      }
-
-      .traction-item {
-        padding: 0.9rem 1rem;
-        border-radius: 0.9rem;
-        border: 1px solid rgba(255, 255, 255, 0.18);
-        background: rgba(5, 10, 24, 0.95);
-        font-size: 0.86rem;
-      }
-
-      .traction-item strong {
-        display: block;
-        margin-bottom: 0.25rem;
-        color: rgba(244, 244, 255, 0.95);
-      }
-
-      .contact-card {
-        margin-top: 1.1rem;
-        padding: 1.1rem 1.1rem 1.2rem;
-        border-radius: 1rem;
-        background: rgba(7, 12, 26, 0.96);
-        border: 1px solid rgba(255, 255, 255, 0.16);
-      }
-
-      .contact-card form {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0.9rem 1rem;
-      }
-
-      .contact-card label {
-        font-size: 0.78rem;
-        letter-spacing: 0.13em;
-        text-transform: uppercase;
-        color: rgba(230, 234, 248, 0.78);
-        display: block;
-        margin-bottom: 0.25rem;
-      }
-
-      .contact-card input,
-      .contact-card textarea {
-        width: 100%;
-        padding: 0.6rem 0.75rem;
-        border-radius: 0.6rem;
-        border: 1px solid rgba(255, 255, 255, 0.22);
-        background: rgba(2, 5, 14, 0.95);
-        color: var(--lm-text);
-        font-size: 0.9rem;
-        font-family: inherit;
-      }
-
-      .contact-card textarea {
-        min-height: 110px;
-        resize: vertical;
-      }
-
-      .contact-card .field-full {
-        grid-column: 1 / -1;
-      }
-
-      .contact-footer {
-        margin-top: 0.9rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.75rem;
-        flex-wrap: wrap;
-      }
-
-      .contact-footer p {
-        margin: 0;
-        font-size: 0.8rem;
-        color: var(--lm-text-soft);
-      }
-
-      footer {
-        padding: 1.75rem 1.5rem 2.25rem;
-        font-size: 0.78rem;
-        color: rgba(204, 210, 230, 0.75);
-        text-align: center;
-      }
-    </style>
-  </head>
-
-  <body>
-    <main>
-      <div class="shell">
-        <!-- Header -->
-        <header class="lm-header">
-          <div class="lm-brand">
-            <picture>
-              <source srcset="logo-blue-4.svg" media="(prefers-color-scheme: dark)" />
-              <source srcset="logo-black-3.svg" media="(prefers-color-scheme: light)" />
-              <img
-                src="logo-blue-4.svg"
-                alt="PRISMqd LineMap logo"
-                class="site-logo"
-              />
-            </picture>
-            <div class="lm-wordmark">
-              <small>PRISMqd · LineLogic</small>
-              <span>LineMap</span>
-            </div>
-          </div>
-
-          <nav class="lm-nav">
-            <a href="#problem">Problem</a>
-            <a href="#solution">Solution</a>
-            <a href="#how">How it works</a>
-            <a href="#traction">Traction</a>
-            <a href="#contact" class="lm-pill-cta">
-              Request access <span>→</span>
-            </a>
-          </nav>
-        </header>
-
-        <!-- Hero -->
-        <section aria-labelledby="hero-heading">
-          <div class="hero-grid">
-            <div class="hero-copy">
-              <h1 id="hero-heading">
-                Know the <span class="accent">limits</span>.<br />Not just the lines.
-              </h1>
-              <p class="lead">
-                LineMap is the first clinical decision support tool purpose‑built for IV
-                line and infusion safety – giving nurses a live, structured map of every
-                lumen, every infusion, and every constraint in one place.
-              </p>
-              <p class="sub">
-                Instead of manual compatibility checks, scattered notes, and
-                last‑minute guesses under pressure, LineMap keeps a shared, real‑time
-                picture of vascular access for the whole care team.
-              </p>
-
-              <div class="hero-actions">
-                <button class="btn-primary">Request pilot access</button>
-                <button class="btn-ghost">View quick‑check demo</button>
-              </div>
-
-              <p class="hero-footnote">
-                <strong>Designed by a practicing critical care nurse</strong> and
-                refined with clinical systems engineers – bedside reality, translated
-                into software.
-              </p>
-
-              <div class="hero-metrics">
-                <div class="metric-card">
-                  <div class="metric-label">IV workflow risk</div>
-                  <div class="metric-value">High‑risk by design</div>
-                  <div class="metric-note">
-                    IV meds concentrate complexity – sickest patients, most fragile
-                    access, most time‑critical therapies.
-                  </div>
-                </div>
-                <div class="metric-card">
-                  <div class="metric-label">Observed reality</div>
-                  <div class="metric-value">10–40% error bands</div>
-                  <div class="metric-note">
-                    Direct‑observation studies show a significant share of IV
-                    administrations include preparation or administration problems.
-                  </div>
-                </div>
-                <div class="metric-card">
-                  <div class="metric-label">Reporting gap</div>
-                  <div class="metric-value">Most events invisible</div>
-                  <div class="metric-note">
-                    Only a fraction of errors are formally reported – the operational
-                    and liability impact is widely under‑counted.
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Body map visual -->
-            <div class="hero-visual" aria-hidden="true">
-              <div class="body-map-shell">
-                <div class="body-map">
-                  <img
-                    src="humanfigure-11.jpg"
-                    alt="Neutral full-body silhouette used for mapping vascular access"
-                  />
-                  <!-- Neck access dot (left side of neck) -->
-                  <div class="access-dot" style="top: 19%; left: 47%;"></div>
-                  <!-- Upper arm access dot (left upper arm) -->
-                  <div class="access-dot" style="top: 38%; left: 36%;"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Problem -->
-        <section id="problem">
-          <div class="section-shell">
-            <span class="pill-tag">The problem</span>
-            <h2>IV line safety lives in workarounds</h2>
-
-            <p>
-              At the bedside today, compatibility logic, lumen capacity, and line risk
-              all live in nurses’ heads, external reference sites, and improvised
-              notes. In a crisis, teams burn time logging into the EHR, drilling down
-              to the MAR, and running one‑to‑one checks across dozens of combinations –
-              while a blown line or unstable patient cannot wait.
-            </p>
-
-            <ul class="problem-list">
-              <li>
-                No single source of truth for vascular access – clinicians mentally
-                track where each infusion is running and why.
-              </li>
-              <li>
-                Compatibility logic lives in external reference sites, partial memory,
-                and hurried phone calls, not in the workflow itself.
-              </li>
-              <li>
-                EHRs capture orders, but not actual access topology or lumen
-                assignments – there is no map of “what is running where.”
-              </li>
-              <li>
-                In an emergency, nurses can spend minutes navigating and cross‑checking
-                instead of immediately routing safe, compatible therapy.
-              </li>
-            </ul>
-
-            <div class="stat-callout">
-              Direct‑observation research has found that a meaningful proportion of IV
-              doses involve at least one error in preparation or administration, and
-              several meta‑analyses estimate combined IV preparation/administration
-              error prevalence above <em>40%</em> in some settings. At the same time,
-              multiple studies show that only a minority of medication errors are ever
-              formally reported, meaning the visible data represent only a slice of the
-              actual burden on patients, clinicians, and systems.
-            </div>
-
-            <p class="whisper">
-              Pssst… the scary part isn’t just the 10–40% error rates in observed IV
-              administrations – it’s how little of the real picture those observations
-              touch. Only a thin slice of doses are ever directly watched, and even
-              fewer events make it into incident reports. If a big chunk of that tiny
-              visible slice is problematic, the true volume of near misses, delayed
-              meds, and quiet failures to rescue is far bigger than any dashboard is
-              showing you right now.
-            </p>
-          </div>
-        </section>
-
-        <!-- Solution -->
-        <section id="solution">
-          <div class="section-shell">
-            <span class="pill-tag">The solution</span>
-            <h2>Structured intelligence for IV access</h2>
-
-            <div class="section-grid">
-              <div>
-                <p>
-                  LineMap gives clinicians a live, shared map of each patient’s
-                  vascular access, infusions, and constraints – so compatibility logic,
-                  lumen capacity, and risk signals are handled by the system, not left
-                  to memory and multi‑tab workarounds.
-                </p>
-
-                <div class="solution-points">
-                  <div class="solution-card">
-                    <h4>Vascular access, mapped</h4>
-                    <p>
-                      Nurses document line placement directly on an anatomical figure,
-                      preserving spatial context and making the interface feel like the
-                      patient, not a form.
-                    </p>
-                  </div>
-
-                  <div class="solution-card">
-                    <h4>LumenLogic™ engine</h4>
-                    <p>
-                      Infusions are assigned to lumens based on compatibility,
-                      vesicant status, priority, and line type – reducing cognitive
-                      load and catching conflicts before they reach the patient.
-                    </p>
-                  </div>
-
-                  <div class="solution-card">
-                    <h4>Unit‑level situational awareness</h4>
-                    <p>
-                      Charge nurses see a live board of every patient’s access status,
-                      flags, and acuity – supporting staffing, escalation decisions,
-                      and rapid reassignment in high‑pressure moments.
-                    </p>
-                  </div>
-
-                  <div class="solution-card">
-                    <h4>Built for emergencies</h4>
-                    <p>
-                      Quick‑check mode lets clinicians enter all active medications and
-                      generate a minimum‑lumen map in seconds – built for blown PIVs,
-                      rapid reassignment, and code‑level events.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <img
-                  src="LMmockup1.jpg"
-                  alt="LineMap interface showing patient access board with IV lines, acuity tags, and infusion status"
-                />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- How it works -->
-        <section id="how">
-          <div class="section-shell">
-            <span class="pill-tag">How it works</span>
-            <h2>From blown line to safe routing in one workflow</h2>
-
-            <div class="section-grid">
-              <div>
-                <p>
-                  LineMap is designed as a point‑of‑care overlay that works alongside
-                  your existing EHR. Clinicians interact with a mapped view of vascular
-                  access while the engine handles compatibility, capacity, and routing
-                  behind the scenes.
-                </p>
-
-                <div class="how-steps">
-                  <div class="how-step">
-                    <span class="step-label">1</span>
-                    <h3>Capture the access reality</h3>
-                    <p>
-                      Tap insertion sites on the body figure to document line type,
-                      lumen count, and key attributes like central vs. peripheral,
-                      dedicated lumens, and vesicant‑only access.
-                    </p>
-                  </div>
-
-                  <div class="how-step">
-                    <span class="step-label">2</span>
-                    <h3>Map the infusions</h3>
-                    <p>
-                      Enter active medications; LumenLogic™ recommends optimal lumen
-                      assignments based on compatibility data, vesicant status, and
-                      clinical priority – flagging conflicts and rate thresholds in
-                      real time.
-                    </p>
-                  </div>
-
-                  <div class="how-step">
-                    <span class="step-label">3</span>
-                    <h3>Use quick‑check in crisis</h3>
-                    <p>
-                      In emergency mode, clinicians can enter all meds that need a
-                      home, then drag‑and‑drop to finalize a minimum‑lumen plan – so
-                      they can move from blown line to safe, compatible routing without
-                      leaving the bedside.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <img
-                  src="LMmockupdash-2.jpg"
-                  alt="LineMap lumen planner quick-check interface with medications entered and minimum lumen map generated"
-                />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Traction -->
-        <section id="traction">
-          <div class="section-shell">
-            <span class="pill-tag">Traction</span>
-            <h2>Built from bedside reality, moving toward scale</h2>
-
-            <div class="traction-grid">
-              <div class="traction-item">
-                <strong>Field‑driven design</strong>
-                Designed by a practicing critical care nurse with 20+ years at the
-                bedside, refined with clinical systems engineers and physician
-                champions.
-              </div>
-              <div class="traction-item">
-                <strong>Intellectual property</strong>
-                Provisional patent filed; LineMap™ and LumenLogic™ marks in process;
-                clinical frameworks (CRF, COVE‑F, CMDS, PRRAA) published on Zenodo.
-              </div>
-              <div class="traction-item">
-                <strong>Functional build deployed</strong>
-                Operational prototype with body‑map interface and lumen‑planning
-                logic; SBIR/AHRQ pathway actively in development.
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Contact -->
-        <section id="contact">
-          <div class="section-shell">
-            <span class="pill-tag">Next steps</span>
-            <h2>Early access for clinical leaders and partners</h2>
-
-            <p>
-              Whether you are a clinical leader, hospital administrator, quality and
-              safety lead, or healthcare investor, we are assembling a focused group
-              of early sites and partners to shape LineMap’s next phase. Tell us a bit
-              about your unit and priorities, and we will follow up with a short,
-              targeted conversation – no generic sales sequence.
-            </p>
-
-            <div class="contact-card">
-              <form>
-                <div>
-                  <label for="name">Name</label>
-                  <input id="name" type="text" name="name" />
-                </div>
-                <div>
-                  <label for="org">Organization</label>
-                  <input id="org" type="text" name="organization" />
-                </div>
-                <div>
-                  <label for="role">Role</label>
-                  <input id="role" type="text" name="role" />
-                </div>
-                <div>
-                  <label for="email">Email</label>
-                  <input id="email" type="email" name="email" />
-                </div>
-                <div class="field-full">
-                  <label for="message">Focus area</label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    placeholder="Tell us about your IV workflows, where you see risk today, and what a successful pilot would need to prove."
-                  ></textarea>
-                </div>
-              </form>
-
-              <div class="contact-footer">
-                <button class="btn-primary">Request a conversation</button>
-                <p>Your information is never shared. We respond within 48 hours.</p>
-              </div>
-            </div>
-          </div>
-        </section>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LineMap — IV Line Intelligence. Real Time. | PRISMqd</title>
+<meta name="description" content="LineMap delivers real-time IV compatibility and capacity decision support at the moment clinical decisions happen. Built for ICU complexity. Shaped by 10 years critical care.">
+<meta name="keywords" content="IV line safety, medication error prevention, IV compatibility, clinical decision support, infusion safety, ICU safety, lumen management">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "LineMap",
+  "applicationCategory": "HealthcareApplication",
+  "description": "Real-time IV line compatibility and capacity clinical decision support for high-acuity care settings",
+  "provider": { "@type": "Organization", "name": "PRISMqd", "url": "https://prismqd.ai" },
+  "offers": { "@type": "Offer", "availability": "https://schema.org/LimitedAvailability" }
+}
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ═══════════════════════════════════════════════════════
+   DESIGN TOKENS — LineMap / Torrez Systems Lab v3.0
+   ═══════════════════════════════════════════════════════ */
+:root {
+  --lm-primary:   #7BB8A9;
+  --lm-mid:       #5C9D8D;
+  --lm-deep:      #3F6E67;
+  --lm-surface:   #C9D9D6;
+  --lm-dark:      #1C2625;
+  --lm-dark-mid:  #2D3A38;
+  --lm-muted:     #C2D4D1;
+
+  --gold:         #D1C247;
+  --gold-mid:     #C4A94D;
+  --gold-muted:   #BFA55A;
+  --gold-deep:    #A8893A;
+
+  --safe:         #218F67;
+  --warning:      #D1C247;
+  --critical:     #C22D4D;
+  --info:         #4B90A6;
+
+  --bg-0: #060c1a;
+  --bg-1: #0b1520;
+  --bg-2: #101c26;
+  --bg-3: #16222e;
+  --bg-card: rgba(22,34,46,0.7);
+
+  --tx-1: #F2F6F5;
+  --tx-2: #C9D9D6;
+  --tx-3: #C2D4D1;
+  --tx-4: #8AACA8;
+
+  --pad-section: 110px 10%;
+  --radius-card: 14px;
+  --radius-btn: 10px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg-0);
+  color: var(--tx-1);
+  font-family: 'Outfit', sans-serif;
+  font-size: 20px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+img { max-width: 100%; display: block; }
+a { color: inherit; }
+button { border: none; background: none; cursor: pointer; font-family: inherit; }
+
+/* ── Typography ── */
+h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 500;
+  font-size: clamp(2.8rem, 5.5vw, 4.4rem);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 500;
+  font-size: clamp(2rem, 3.5vw, 3.1rem);
+  line-height: 1.18;
+}
+h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 500;
+  font-size: clamp(1.15rem, 2vw, 1.65rem);
+  line-height: 1.3;
+}
+.eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 15px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.mono-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 15px;
+  letter-spacing: 0.1em;
+  color: var(--tx-3);
+}
+
+/* ── Jeweled button system ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 46px;
+  padding: 0 26px;
+  border-radius: var(--radius-btn);
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  white-space: nowrap;
+}
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 50%;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.1), transparent);
+  pointer-events: none;
+  border-radius: var(--radius-btn) var(--radius-btn) 0 0;
+}
+.btn-primary {
+  background: var(--lm-deep);
+  color: var(--tx-1);
+  border: 1.5px solid var(--gold-mid);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), inset 0 -1px 0 rgba(0,0,0,0.2), 0 2px 6px rgba(0,0,0,0.18);
+}
+.btn-primary:hover {
+  background: var(--lm-mid);
+  transform: translateY(-2px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.09), 0 8px 20px rgba(63,110,103,0.28), 0 0 16px rgba(196,169,77,0.12);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--tx-2);
+  border: 1px solid rgba(201,217,214,0.2);
+}
+.btn-ghost::before { display: none; }
+.btn-ghost:hover {
+  border-color: rgba(201,217,214,0.4);
+  color: var(--tx-1);
+  background: rgba(201,217,214,0.05);
+}
+.btn-gold {
+  background: rgba(196,169,77,0.12);
+  color: var(--gold-mid);
+  border: 1px solid rgba(196,169,77,0.4);
+}
+.btn-gold:hover {
+  background: rgba(196,169,77,0.18);
+  border-color: rgba(196,169,77,0.65);
+  color: var(--gold);
+}
+
+/* ── Layout ── */
+.section-inner { padding: var(--pad-section); }
+.divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent 0%, rgba(196,169,77,0.18) 40%, rgba(196,169,77,0.18) 60%, transparent 100%);
+  margin: 0 10%;
+}
+.eyebrow-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.eyebrow-row::before {
+  content: '';
+  display: block;
+  width: 28px;
+  height: 1px;
+  background: var(--gold-mid);
+  opacity: 0.6;
+}
+
+/* ── Nav ── */
+nav {
+  position: fixed;
+  top: 0; width: 100%;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 5%;
+  background: rgba(6,12,26,0.9);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(196,169,77,0.1);
+  transition: border-color 0.4s, background 0.4s;
+}
+nav.scrolled {
+  background: rgba(6,12,26,0.97);
+  border-bottom-color: rgba(196,169,77,0.22);
+}
+.nav-logo { height: 30px; width: auto; }
+.nav-links { display: flex; align-items: center; gap: 28px; }
+.nav-links a {
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--tx-2);
+  letter-spacing: 0.03em;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--tx-1); }
+.nav-cta { padding: 8px 20px !important; height: auto !important; font-size: 15px !important; }
+
+/* ── Hero ── */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 140px 10% 100px;
+  position: relative;
+  overflow: hidden;
+}
+.hero-glow-a {
+  position: absolute; top: -180px; right: -160px;
+  width: 680px; height: 680px;
+  background: radial-gradient(ellipse, rgba(63,110,103,0.11) 0%, transparent 65%);
+  pointer-events: none;
+}
+.hero-glow-b {
+  position: absolute; bottom: -100px; left: 20%;
+  width: 500px; height: 400px;
+  background: radial-gradient(ellipse, rgba(196,169,77,0.05) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-product-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+.hero-product-tag .dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--lm-primary);
+  box-shadow: 0 0 8px rgba(123,184,169,0.5);
+}
+.hero h1 { max-width: 820px; margin-bottom: 26px; }
+.hero h1 em { font-style: italic; color: var(--lm-primary); }
+.hero-sub {
+  font-size: 1.2rem;
+  color: var(--tx-2);
+  max-width: 540px;
+  margin-bottom: 44px;
+  font-weight: 400;
+  line-height: 1.8;
+}
+.hero-actions { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+.hero-micro {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  margin-top: 56px;
+  padding-top: 28px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  flex-wrap: wrap;
+}
+.micro-item {
+  font-family: 'DM Mono', monospace;
+  font-size: 15px;
+  color: var(--tx-2);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.micro-item::before {
+  content: '';
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--lm-mid);
+  flex-shrink: 0;
+}
+
+/* ── Stat layer ── */
+.stat-layer { background: var(--bg-1); padding: var(--pad-section); }
+.stat-layer-head { max-width: 700px; margin-bottom: 56px; }
+.stat-layer-head h2 { margin-top: 14px; }
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 36px;
+}
+.stat-card {
+  background: rgba(6,12,26,0.55);
+  border: 1px solid rgba(196,169,77,0.14);
+  border-radius: var(--radius-card);
+  padding: 34px 30px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.25s, transform 0.25s;
+}
+.stat-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(to right, transparent, var(--gold-mid), transparent);
+  opacity: 0.5;
+}
+.stat-card:hover { border-color: rgba(196,169,77,0.28); transform: translateY(-3px); }
+.stat-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 4rem;
+  font-weight: 600;
+  color: var(--gold);
+  line-height: 1;
+  margin-bottom: 16px;
+  display: block;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.stat-body {
+  font-size: 1rem;
+  color: var(--tx-2);
+  line-height: 1.7;
+  margin-bottom: 16px;
+}
+.stat-src {
+  font-family: 'DM Mono', monospace;
+  font-size: 15px;
+  color: var(--tx-3);
+  letter-spacing: 0.06em;
+  line-height: 1.6;
+}
+.whisper {
+  background: rgba(63,110,103,0.07);
+  border-left: 2px solid rgba(123,184,169,0.25);
+  padding: 20px 24px;
+  border-radius: 0 8px 8px 0;
+  font-size: 1.05rem;
+  color: var(--tx-2);
+  font-style: italic;
+  line-height: 1.75;
+}
+
+/* ── Problem ── */
+.problem-inner { padding: var(--pad-section); }
+.problem-head { margin-bottom: 56px; max-width: 700px; }
+.problem-head h2 { margin-top: 14px; }
+.problem-head p { margin-top: 16px; color: var(--tx-2); font-size: 1rem; max-width: 580px; line-height: 1.75; }
+.problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px 80px; }
+.problem-item { display: flex; flex-direction: column; gap: 12px; }
+.problem-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 15px;
+  letter-spacing: 0.18em;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+.problem-item h3 { font-size: 1.25rem; }
+.problem-item p { font-size: 1.05rem; color: var(--tx-2); line-height: 1.75; }
+
+/* ── Solution ── */
+.solution-inner {
+  padding: var(--pad-section);
+  background: linear-gradient(140deg, var(--bg-1) 0%, rgba(28,38,37,0.95) 100%);
+}
+.solution-head { max-width: 660px; margin-bottom: 56px; }
+.solution-head h2 { margin-top: 14px; }
+.solution-head .note {
+  margin-top: 18px;
+  color: var(--tx-2);
+  font-size: 1.05rem;
+  line-height: 1.75;
+  border-left: 2px solid rgba(123,184,169,0.25);
+  padding-left: 16px;
+  font-style: italic;
+}
+.solution-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.sol-card {
+  background: rgba(6,12,26,0.45);
+  border: 1px solid rgba(123,184,169,0.12);
+  border-radius: var(--radius-card);
+  padding: 28px;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.sol-card:hover { border-color: rgba(123,184,169,0.3); transform: translateY(-3px); }
+.sol-icon {
+  width: 40px; height: 40px;
+  border-radius: 8px;
+  background: rgba(63,110,103,0.2);
+  border: 1px solid rgba(123,184,169,0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.sol-icon svg { width: 20px; height: 20px; stroke: var(--lm-primary); fill: none; stroke-width: 1.5; }
+.sol-card h3 { font-size: 1.1rem; margin-bottom: 10px; }
+.sol-card p { font-size: 1.05rem; color: var(--tx-2); line-height: 1.7; }
+
+/* ═══════════════════════════════════════════════════════
+   PRODUCT PREVIEW — PHONE MOCKUPS
+   ═══════════════════════════════════════════════════════ */
+.preview-inner { padding: var(--pad-section); overflow: hidden; }
+.preview-head { text-align: center; max-width: 600px; margin: 0 auto 72px; }
+.preview-head h2 { margin-top: 14px; }
+.preview-head p { margin-top: 14px; color: var(--tx-2); font-size: 1rem; line-height: 1.7; }
+.phones-row {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 64px;
+  flex-wrap: wrap;
+}
+.phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+
+/* Real screenshot presentation */
+.mockup-img-frame {
+  width: 320px;
+  position: relative;
+  transition: transform 0.35s ease, filter 0.35s ease;
+  filter: drop-shadow(0 40px 60px rgba(0,0,0,0.55)) drop-shadow(0 0 40px rgba(63,110,103,0.1));
+}
+.mockup-img-frame:hover {
+  transform: translateY(-10px) rotate(-0.4deg);
+  filter: drop-shadow(0 55px 80px rgba(0,0,0,0.65)) drop-shadow(0 0 60px rgba(63,110,103,0.15));
+}
+.mockup-img-frame img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Phone label */
+.phone-label { text-align: center; }
+.phone-label .name {
+  display: block;
+  font-family: 'DM Mono', monospace;
+  font-size: 15px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lm-primary);
+  margin-bottom: 6px;
+}
+.phone-label .desc { font-size: 17px; color: var(--tx-2); }
+
+
+/* Phone label */
+.phone-label { text-align: center; }
+.phone-label .name {
+  display: block;
+  font-family: 'DM Mono', monospace;
+  font-size: 15px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lm-primary);
+  margin-bottom: 6px;
+}
+.phone-label .desc { font-size: 17px; color: var(--tx-2); }
+
+/* ── How it works ── */
+.how-inner { padding: var(--pad-section); background: var(--bg-1); }
+.how-head { margin-bottom: 56px; max-width: 560px; }
+.how-head h2 { margin-top: 14px; }
+.steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; position: relative; }
+.steps::before {
+  content: '';
+  position: absolute;
+  top: 26px; left: calc(10% + 14px); right: calc(10% + 14px);
+  height: 1px;
+  background: linear-gradient(to right, var(--lm-deep), rgba(63,110,103,0.2));
+  z-index: 0;
+}
+.step { padding: 0 16px; position: relative; z-index: 1; }
+.step-circle {
+  width: 54px; height: 54px;
+  border-radius: 50%;
+  background: var(--bg-0);
+  border: 1.5px solid var(--lm-deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+  font-family: 'DM Mono', monospace;
+  font-size: 15px;
+  color: var(--gold-mid);
+  letter-spacing: 0.05em;
+  z-index: 1;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.step:hover .step-circle { border-color: var(--lm-primary); box-shadow: 0 0 16px rgba(63,110,103,0.25); }
+.step h3 { font-size: 1rem; margin-bottom: 8px; }
+.step p { font-size: 1.05rem; color: var(--tx-2); line-height: 1.7; }
+
+/* ── Differentiation ── */
+.diff-inner { padding: var(--pad-section); }
+.diff-head { max-width: 600px; margin-bottom: 48px; }
+.diff-head h2 { margin-top: 14px; }
+.diff-head p { margin-top: 14px; color: var(--tx-2); font-size: 1.05rem; line-height: 1.75; max-width: 520px; }
+.diff-table {
+  width: 100%; border-collapse: separate; border-spacing: 0;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius-card); overflow: hidden;
+}
+.diff-table th {
+  padding: 15px 22px;
+  font-family: 'DM Mono', monospace;
+  font-size: 15px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tx-2);
+  background: rgba(6,12,26,0.7);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  text-align: left;
+}
+.diff-table th.hl { color: var(--lm-primary); }
+.diff-table td {
+  padding: 14px 22px;
+  font-size: 1.05rem;
+  color: var(--tx-2);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  background: rgba(6,12,26,0.3);
+  vertical-align: middle;
+}
+.diff-table tr:last-child td { border-bottom: none; }
+.diff-table td.feature { color: var(--tx-2); font-weight: 500; }
+.diff-table td.no { color: var(--tx-3); opacity: 0.55; }
+.diff-table td.lm-yes { color: var(--safe); background: rgba(33,143,103,0.06); font-weight: 500; }
+
+/* ── Trust ── */
+.trust-inner {
+  padding: var(--pad-section);
+  background: linear-gradient(140deg, rgba(28,38,37,0.97) 0%, var(--bg-1) 100%);
+}
+.trust-head { max-width: 600px; margin-bottom: 56px; }
+.trust-head h2 { margin-top: 14px; }
+.trust-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; }
+.founder-col { border-left: 2px solid rgba(196,169,77,0.35); padding-left: 28px; }
+.founder-q {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.6rem;
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1.6;
+  color: var(--tx-2);
+  margin-bottom: 22px;
+}
+.founder-by {
+  font-family: 'DM Mono', monospace;
+  font-size: 15px;
+  letter-spacing: 0.13em;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+.cred-stack { display: flex; flex-direction: column; gap: 14px; }
+.cred-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 18px 20px;
+  background: rgba(6,12,26,0.45);
+  border: 1px solid rgba(201,217,214,0.07);
+  border-radius: 10px;
+  transition: border-color 0.2s;
+}
+.cred-row:hover { border-color: rgba(201,217,214,0.15); }
+.cred-ico {
+  width: 38px; height: 38px; flex-shrink: 0;
+  border-radius: 7px;
+  background: rgba(63,110,103,0.18);
+  border: 1px solid rgba(123,184,169,0.14);
+  display: flex; align-items: center; justify-content: center;
+}
+.cred-ico svg { width: 18px; height: 18px; stroke: var(--lm-primary); fill: none; stroke-width: 1.5; }
+.cred-txt strong { display: block; font-size: 1.05rem; font-weight: 600; color: var(--tx-1); margin-bottom: 4px; }
+.cred-txt span { font-size: 1.05rem; color: var(--tx-2); line-height: 1.6; }
+
+/* ── FAQ ── */
+.faq-inner { padding: var(--pad-section); }
+.faq-head { max-width: 560px; margin-bottom: 48px; }
+.faq-head h2 { margin-top: 14px; }
+.faq-list { max-width: 780px; }
+.faq-item { border-bottom: 1px solid rgba(255,255,255,0.06); }
+.faq-item:first-child { border-top: 1px solid rgba(255,255,255,0.06); }
+.faq-q {
+  width: 100%; text-align: left;
+  padding: 26px 0;
+  display: flex; justify-content: space-between; align-items: center; gap: 16px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--tx-2);
+  cursor: pointer;
+  transition: color 0.2s;
+  background: none; border: none;
+}
+.faq-q:hover { color: var(--tx-1); }
+.faq-toggle {
+  width: 26px; height: 26px; flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(196,169,77,0.3);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--gold-mid);
+  font-size: 18px; line-height: 1;
+  transition: transform 0.25s ease, border-color 0.2s;
+  font-family: 'Outfit', sans-serif; font-weight: 300;
+}
+.faq-item.open .faq-toggle { transform: rotate(45deg); border-color: var(--gold-mid); }
+.faq-body {
+  font-size: 1.05rem;
+  color: var(--tx-2);
+  line-height: 1.8;
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.32s ease, padding 0.32s ease, opacity 0.32s ease;
+  opacity: 0; padding: 0;
+}
+.faq-item.open .faq-body { max-height: 360px; opacity: 1; padding-bottom: 26px; }
+
+/* ── CTA / Form ── */
+.cta-outer {
+  background: linear-gradient(130deg, rgba(28,38,37,0.98) 0%, var(--bg-0) 60%);
+  position: relative; overflow: hidden;
+}
+.cta-glow {
+  position: absolute; top: -120px; left: -120px;
+  width: 560px; height: 480px;
+  background: radial-gradient(ellipse, rgba(63,110,103,0.09) 0%, transparent 70%);
+  pointer-events: none;
+}
+.cta-inner-wrap {
+  padding: var(--pad-section);
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 72px; align-items: start;
+}
+.cta-text-col h2 { margin-top: 14px; }
+.cta-text-col p { margin-top: 16px; color: var(--tx-2); font-size: 1.05rem; line-height: 1.8; }
+.pilot-list { margin-top: 28px; display: flex; flex-direction: column; gap: 11px; }
+.pilot-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  font-size: 1.05rem; color: var(--tx-2); line-height: 1.55;
+}
+.pilot-item::before {
+  content: ''; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--lm-mid); flex-shrink: 0; margin-top: 8px;
+}
+.form-card {
+  background: rgba(28,38,37,0.5);
+  border: 1px solid rgba(123,184,169,0.14);
+  border-radius: 18px;
+  padding: 36px 32px;
+}
+.form-head { margin-bottom: 26px; }
+.form-head h3 { margin-top: 8px; font-size: 1.3rem; }
+.fld-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.fld { margin-bottom: 12px; }
+.fld-lbl {
+  display: block;
+  font-family: 'DM Mono', monospace;
+  font-size: 15px; letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tx-2); margin-bottom: 6px;
+}
+input, select, textarea {
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(6,12,26,0.65);
+  border: 1px solid rgba(201,217,214,0.1);
+  border-radius: 8px;
+  color: var(--tx-1);
+  font-family: 'Outfit', sans-serif;
+  font-size: 17px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  -webkit-appearance: none; appearance: none;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: rgba(123,184,169,0.35);
+  box-shadow: 0 0 0 3px rgba(63,110,103,0.1);
+}
+input::placeholder, textarea::placeholder { color: var(--lm-muted); opacity: 0.55; }
+select option { background: var(--lm-dark); }
+textarea { resize: vertical; min-height: 80px; }
+.submit-btn {
+  width: 100%; height: 48px;
+  background: var(--lm-deep); color: var(--tx-1);
+  border: 1.5px solid var(--gold-mid);
+  border-radius: var(--radius-btn);
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+  cursor: pointer; margin-top: 6px;
+  position: relative; overflow: hidden;
+  transition: background 0.18s, transform 0.18s, box-shadow 0.18s;
+}
+.submit-btn::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.09), transparent);
+  pointer-events: none;
+}
+.submit-btn:hover {
+  background: var(--lm-mid);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(63,110,103,0.25), 0 0 0 1px rgba(196,169,77,0.3);
+}
+.submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.form-note-txt {
+  font-family: 'DM Mono', monospace;
+  font-size: 15px; color: var(--tx-3);
+  text-align: center; margin-top: 12px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+.form-success-block { display: none; text-align: center; padding: 40px 20px; }
+.form-success-block .s-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.6rem; color: var(--lm-primary); margin-bottom: 10px;
+}
+.form-success-block .s-sub { font-size: 1.05rem; color: var(--tx-3); }
+
+/* ── Footer ── */
+footer {
+  padding: 44px 10%;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 20px;
+}
+.ft-logo img { height: 24px; opacity: 0.45; transition: opacity 0.2s; }
+.ft-logo img:hover { opacity: 0.7; }
+.ft-copy {
+  font-family: 'DM Mono', monospace;
+  font-size: 15px; color: var(--tx-3);
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+.ft-links { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+.ft-links a, .ft-links button {
+  font-size: 15px; color: var(--tx-3);
+  text-decoration: none; transition: color 0.2s; letter-spacing: 0.03em;
+  background: none; border: none; cursor: pointer; padding: 0;
+  font-family: 'Outfit', sans-serif;
+}
+.ft-links a:hover, .ft-links button:hover { color: var(--tx-1); }
+.ft-li-link {
+  display: flex; align-items: center; gap: 7px;
+}
+.ft-li-link svg { width: 16px; height: 16px; fill: currentColor; flex-shrink: 0; }
+.ft-sep { color: var(--tx-4); font-size: 13px; user-select: none; }
+
+/* ── Privacy modal ── */
+.priv-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 2000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.priv-overlay.open { display: flex; }
+.priv-modal {
+  background: #0f1c2e;
+  border: 1px solid rgba(196,169,77,0.2);
+  border-radius: 18px;
+  max-width: 640px;
+  width: 100%;
+  max-height: 82vh;
+  overflow-y: auto;
+  padding: 44px 40px;
+  position: relative;
+  scrollbar-width: thin;
+}
+.priv-modal::-webkit-scrollbar { width: 4px; }
+.priv-modal::-webkit-scrollbar-thumb { background: rgba(92,157,141,0.3); border-radius: 2px; }
+.priv-close {
+  position: absolute; top: 18px; right: 20px;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
+  color: var(--tx-3);
+  font-size: 18px; line-height: 1;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color 0.2s, color 0.2s;
+}
+.priv-close:hover { border-color: rgba(255,255,255,0.25); color: var(--tx-1); }
+.priv-modal h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.9rem; font-weight: 500;
+  margin-bottom: 6px;
+}
+.priv-modal .priv-date {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--gold-mid);
+  margin-bottom: 28px;
+}
+.priv-modal h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.2rem; font-weight: 500;
+  color: var(--tx-1); margin: 26px 0 8px;
+}
+.priv-modal p, .priv-modal li {
+  font-size: 15px; color: var(--tx-2);
+  line-height: 1.75; margin-bottom: 10px;
+}
+.priv-modal ul { padding-left: 20px; margin-bottom: 10px; }
+.priv-modal a { color: var(--lm-primary); text-decoration: underline; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg-0); }
+::-webkit-scrollbar-thumb { background: rgba(92,157,141,0.25); border-radius: 3px; }
+
+/* ── Responsive ── */
+@media (max-width: 1100px) {
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+  .stat-grid .stat-card:last-child { grid-column: 1 / -1; }
+  .solution-grid { grid-template-columns: 1fr 1fr; }
+  .steps { grid-template-columns: repeat(3, 1fr); gap: 32px; }
+  .steps::before { display: none; }
+}
+@media (max-width: 860px) {
+  :root { --pad-section: 72px 6%; }
+  body { font-size: 20px; }
+  .problem-grid { grid-template-columns: 1fr; gap: 36px; }
+  .trust-grid { grid-template-columns: 1fr; gap: 44px; }
+  .cta-inner-wrap { grid-template-columns: 1fr; gap: 44px; }
+  .fld-row { grid-template-columns: 1fr; }
+  .phones-row { flex-direction: column; align-items: center; gap: 48px; }
+  nav { padding: 14px 5%; }
+  .hero { padding: 120px 6% 80px; }
+  .steps { grid-template-columns: 1fr 1fr; }
+  .phone:hover { transform: none; }
+}
+@media (max-width: 620px) {
+  .stat-grid { grid-template-columns: 1fr; }
+  .stat-grid .stat-card:last-child { grid-column: auto; }
+  .solution-grid { grid-template-columns: 1fr; }
+  .steps { grid-template-columns: 1fr; }
+  .hero-actions { flex-direction: column; align-items: flex-start; }
+  footer { flex-direction: column; text-align: center; }
+  .diff-table { font-size: 1.05rem; }
+  .diff-table th, .diff-table td { padding: 10px 12px; }
+  .nav-links a:not(.nav-cta) { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav" role="navigation" aria-label="Main navigation">
+  <a href="#" aria-label="PRISMqd — LineMap home">
+    <img src="logo.png" alt="PRISMqd LineMap" class="nav-logo">
+  </a>
+  <div class="nav-links">
+    <a href="#problem">Evidence</a>
+    <a href="#solution">Product</a>
+    <a href="#preview">Preview</a>
+    <a href="#how">Workflow</a>
+    <a href="#contact" class="btn btn-gold nav-cta">Apply for Pilot</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" aria-label="Hero">
+  <div class="hero-glow-a" aria-hidden="true"></div>
+  <div class="hero-glow-b" aria-hidden="true"></div>
+  <div class="hero-product-tag">
+    <span class="dot" aria-hidden="true"></span>
+    <span class="eyebrow">LineMap — by PRISMqd · LineLogic Division</span>
+  </div>
+  <h1>Know the limits.<br><em>Not just the lines.</em></h1>
+  <p class="hero-sub">Compatibility. Capacity. Dwell time. In real time — at the clinical moment decisions happen. Not in the chart. Not after the event.</p>
+  <div class="hero-actions">
+    <a href="#contact" class="btn btn-primary">Apply for Pilot Access</a>
+    <a href="#solution" class="btn btn-ghost">See the Product</a>
+  </div>
+  <div class="hero-micro" aria-label="Product attributes">
+    <span class="micro-item">ICU-Grade Decision Support</span>
+    <span class="micro-item">Lumen-Aware Architecture</span>
+    <span class="micro-item">Real-Time Compatibility</span>
+    <span class="micro-item">Provisional Patent Filed</span>
+  </div>
+</section>
+
+<div class="divider" aria-hidden="true"></div>
+
+<!-- STAT LAYER -->
+<section class="stat-layer" id="problem" aria-label="Clinical evidence">
+  <div class="stat-layer-head">
+    <div class="eyebrow-row"><span class="eyebrow">The Evidence</span></div>
+    <h2>The IV route is the highest-harm vector.<br>Most systems provide the least support for it.</h2>
+  </div>
+  <div class="stat-grid">
+    <div class="stat-card">
+      <span class="stat-num">54%</span>
+      <p class="stat-body">Of potentially harmful medication errors in hospital settings involve the intravenous route — disproportionate to IV's share of total medication administrations, and consistent across healthcare systems studied.</p>
+      <span class="stat-src">Institute for Safe Medication Practices (ISMP); AHRQ Patient Safety Network — Medication Error Reporting</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num">3×</span>
+      <p class="stat-body">IV route errors are approximately three times more likely to result in serious patient harm compared to oral route errors. Rapid onset, systemic delivery, and irreversibility remove the interception window available in other routes.</p>
+      <span class="stat-src">AHRQ Patient Safety Network; ISMP Comparative Route Harm Analysis; American Journal of Health-System Pharmacy</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num">400K+</span>
+      <p class="stat-body">Preventable adverse drug events occur annually in U.S. hospitals. IV administration errors contribute disproportionately to fatal outcomes — concentrated in complex, high-acuity patients with the most lines and the most medications.</p>
+      <span class="stat-src">Institute of Medicine, Preventing Medication Errors (2006); AHRQ Medication Safety Program</span>
+    </div>
+  </div>
+  <div class="whisper" role="note">
+    Published figures reflect what reaches voluntary reporting systems and administrative databases. Subject-matter consensus holds that actual IV error frequency is an order of magnitude higher. The visible number is the floor, not the ceiling. LineMap was designed for what is counted and for what never gets reported.
+  </div>
+</section>
+
+<div class="divider" aria-hidden="true"></div>
+
+<!-- PROBLEM -->
+<section aria-label="Problem framing">
+  <div class="problem-inner">
+    <div class="problem-head">
+      <div class="eyebrow-row"><span class="eyebrow">The Gap</span></div>
+      <h2>The system didn't fail.<br>It never existed.</h2>
+      <p>Every clinical environment has solved IV line management the same way: memory, phone calls, and peer checks in real time under maximum cognitive load. None of these scale. None of these leave a record.</p>
+    </div>
+    <div class="problem-grid">
+      <div class="problem-item">
+        <span class="problem-num">01</span>
+        <h3>Compatibility is solved by recall and consultation</h3>
+        <p>Clinicians managing active infusions rely on fragmented reference apps, institutional memory, and peer consultation — in real time, on already-loaded cognitive bandwidth. These methods do not scale and do not create accountability trails.</p>
       </div>
-    </main>
+      <div class="problem-item">
+        <span class="problem-num">02</span>
+        <h3>Lumen capacity is invisible until access fails</h3>
+        <p>IV access constraints are communicated verbally and reconciled at the bedside. No centralized, real-time view of line architecture exists. Decisions are made without situational awareness of what each lumen is carrying.</p>
+      </div>
+      <div class="problem-item">
+        <span class="problem-num">03</span>
+        <h3>The highest-complexity patients receive the least support</h3>
+        <p>Critically ill patients have the most IV medications, the most central lines, and the highest consequence for error. They are also the patients for whom real-time infusion decision support is most absent.</p>
+      </div>
+      <div class="problem-item">
+        <span class="problem-num">04</span>
+        <h3>Documentation records events. It does not prevent them.</h3>
+        <p>EHR infusion documentation is retrospective, structured for billing, and does not operate in the decision interval before administration. The gap between clinical decision and any safety check is unmonitored.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-    <footer>
-      LineMap · PRISMqd LineLogic · IV Line Safety Intelligence · All rights reserved.
-    </footer>
-  </body>
+<div class="divider" aria-hidden="true"></div>
+
+<!-- SOLUTION -->
+<section id="solution" aria-label="Product description">
+  <div class="solution-inner">
+    <div class="solution-head">
+      <div class="eyebrow-row"><span class="eyebrow">What LineMap Is</span></div>
+      <h2>Decision support at the moment of infusion. Not before. Not after.</h2>
+      <p class="note">LineMap is not documentation. It is not a reference lookup. It is not an EHR replacement. It is lumen-aware, compatibility-aware, real-time cognitive support — at the exact interval where IV decisions happen and where current systems are silent.</p>
+    </div>
+    <div class="solution-grid" role="list">
+      <div class="sol-card" role="listitem">
+        <div class="sol-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>
+        </div>
+        <h3>Real-Time Compatibility</h3>
+        <p>Instant Y-site and co-administration compatibility checks at the point of decision — surfaced without leaving clinical workflow.</p>
+      </div>
+      <div class="sol-card" role="listitem">
+        <div class="sol-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
+        </div>
+        <h3>Lumen Architecture View</h3>
+        <p>Full visibility into IV access sites, lumen assignments, current infusions, and capacity — organized by patient, updated in real time.</p>
+      </div>
+      <div class="sol-card" role="listitem">
+        <div class="sol-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+        </div>
+        <h3>Structured Safety Alerts</h3>
+        <p>Non-intrusive alerts at the point of incompatibility or access conflict. Designed to reduce cognitive load, not amplify alarm fatigue.</p>
+      </div>
+      <div class="sol-card" role="listitem">
+        <div class="sol-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <h3>Dwell Time Monitoring</h3>
+        <p>Automated dwell tracking with evidence-based threshold alerts — flagging access past safe windows before complications develop.</p>
+      </div>
+      <div class="sol-card" role="listitem">
+        <div class="sol-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/></svg>
+        </div>
+        <h3>Unit-Wide Patient Access Board</h3>
+        <p>Real-time view across all active lines, access status, and risk flags for the entire unit — for charge nurses and clinical leads.</p>
+      </div>
+      <div class="sol-card" role="listitem">
+        <div class="sol-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z"/></svg>
+        </div>
+        <h3>EHR Integration Ready</h3>
+        <p>Architecture designed for downstream HL7 FHIR connectivity. Operational as a standalone layer today. Integration-ready for tomorrow.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider" aria-hidden="true"></div>
+
+<!-- PRODUCT PREVIEW — PHONE MOCKUPS -->
+<section id="preview" aria-label="Product screens">
+  <div class="preview-inner">
+    <div class="preview-head">
+      <div class="eyebrow-row" style="justify-content:center;"><span class="eyebrow">Product Preview</span></div>
+      <h2>Real interface. Active prototype.</h2>
+      <p>These screens are not concept renders. They are from a functional prototype shaped by a decade in critical care — where IV complexity and IV consequence are highest.</p>
+    </div>
+
+    <div class="phones-row">
+
+      <!-- Screen 1: Lumen Planner / Quick Check -->
+      <div class="phone-wrap">
+        <div class="mockup-img-frame">
+          <img src="LMmockup1.png"
+               alt="LineMap Quick Check — Lumen Planner: emergency triage mode showing 10 active medications mapped to minimum lumen requirements with Y-site compatibility"
+               loading="lazy">
+        </div>
+        <div class="phone-label">
+          <span class="name">Quick Check — Lumen Planner</span>
+          <span class="desc">Triage mode · minimum lumen mapping · Y-site compatibility</span>
+        </div>
+      </div>
+
+      <!-- Screen 2: Patient Access Board -->
+      <div class="phone-wrap" style="margin-top:52px;">
+        <div class="mockup-img-frame">
+          <img src="LMmockupdash.png"
+               alt="LineMap Patient Access Board: unit-wide ICU view showing 4 patients with bed assignments, line counts, active infusions, and risk flag badges"
+               loading="lazy">
+        </div>
+        <div class="phone-label">
+          <span class="name">Patient Access Board</span>
+          <span class="desc">Unit-wide line status · LineLogic ICU View</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="divider" aria-hidden="true"></div>
+
+<!-- HOW IT WORKS -->
+<section id="how" aria-label="Workflow description">
+  <div class="how-inner">
+    <div class="how-head">
+      <div class="eyebrow-row"><span class="eyebrow">Clinical Workflow</span></div>
+      <h2>From access to administration — in one view.</h2>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-circle" aria-hidden="true">01</div>
+        <h3>Patient Loaded</h3>
+        <p>Nurse opens the encounter. All active IV access, current medications, and dwell history are visible immediately — no navigation, no lookup.</p>
+      </div>
+      <div class="step">
+        <div class="step-circle" aria-hidden="true">02</div>
+        <h3>Lines Mapped</h3>
+        <p>Each lumen is displayed by site, type, current assignments, and capacity. Access architecture visible at a glance.</p>
+      </div>
+      <div class="step">
+        <div class="step-circle" aria-hidden="true">03</div>
+        <h3>Compatibility Checked</h3>
+        <p>Co-infusion compatibility confirmed in real time before administration. Alerts surface only when action is required — no noise.</p>
+      </div>
+      <div class="step">
+        <div class="step-circle" aria-hidden="true">04</div>
+        <h3>Risks Flagged Early</h3>
+        <p>Dwell thresholds, access conflicts, and high-alert medication flags surface before events occur — not after they are documented.</p>
+      </div>
+      <div class="step">
+        <div class="step-circle" aria-hidden="true">05</div>
+        <h3>Team Visibility</h3>
+        <p>The Patient Access Board gives charge nurses a real-time unit view — every patient, every line, every active risk flag.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider" aria-hidden="true"></div>
+
+<!-- DIFFERENTIATION -->
+<section aria-label="Capability comparison">
+  <div class="diff-inner">
+    <div class="diff-head">
+      <div class="eyebrow-row"><span class="eyebrow">Positioning</span></div>
+      <h2>What LineMap addresses that nothing else does.</h2>
+      <p>Current tools document what happened or provide static reference. LineMap operates in the interval before documentation — at the decision moment between ordering and administration.</p>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="diff-table" aria-label="Capability comparison">
+        <thead>
+          <tr>
+            <th scope="col">Capability</th>
+            <th scope="col">EHR Infusion Module</th>
+            <th scope="col">IV Reference Apps</th>
+            <th scope="col" class="hl">LineMap</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="feature">Real-time lumen capacity view</td>
+            <td class="no">Not available</td>
+            <td class="no">Not available</td>
+            <td class="lm-yes">✓ Per patient, per lumen</td>
+          </tr>
+          <tr>
+            <td class="feature">Active co-infusion compatibility check</td>
+            <td class="no">Not available</td>
+            <td>Reference lookup only</td>
+            <td class="lm-yes">✓ At point of care</td>
+          </tr>
+          <tr>
+            <td class="feature">Dwell time monitoring + alerts</td>
+            <td class="no">Not available</td>
+            <td class="no">Not available</td>
+            <td class="lm-yes">✓ Evidence-based thresholds</td>
+          </tr>
+          <tr>
+            <td class="feature">Unit-wide IV access board</td>
+            <td class="no">Not available</td>
+            <td class="no">Not available</td>
+            <td class="lm-yes">✓ Real-time, all patients</td>
+          </tr>
+          <tr>
+            <td class="feature">Decision support — not documentation</td>
+            <td class="no">Documentation only</td>
+            <td class="no">Reference only</td>
+            <td class="lm-yes">✓ Pre-event, actionable</td>
+          </tr>
+          <tr>
+            <td class="feature">Designed for ICU-level complexity</td>
+            <td>Partial, retrospective</td>
+            <td class="no">Not available</td>
+            <td class="lm-yes">✓ Purpose-built</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<div class="divider" aria-hidden="true"></div>
+
+<!-- TRUST -->
+<section aria-label="Team and credibility">
+  <div class="trust-inner">
+    <div class="trust-head">
+      <div class="eyebrow-row"><span class="eyebrow">Founded From Practice</span></div>
+      <h2>Built by the clinician who needed it.</h2>
+    </div>
+    <div class="trust-grid">
+      <div class="founder-col">
+        <p class="founder-q">"I built LineMap because I spent a decade in critical care watching the IV line become the most dangerous space in patient care — and the least supported. Every system assumed someone else had already solved it."</p>
+        <span class="founder-by">Jennifer Torrez, BSN RN — Founder &amp; CEO, PRISMqd</span>
+      </div>
+      <div class="cred-stack" role="list">
+        <div class="cred-row" role="listitem">
+          <div class="cred-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z"/></svg>
+          </div>
+          <div class="cred-txt">
+            <strong>10 years critical care nursing</strong>
+            <span>ICU, rapid response, complex cardiac — direct management of the IV access problems LineMap addresses</span>
+          </div>
+        </div>
+        <div class="cred-row" role="listitem">
+          <div class="cred-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"/></svg>
+          </div>
+          <div class="cred-txt">
+            <strong>20+ years in healthcare overall</strong>
+            <span>Clinical operations, systems design, patient safety architecture, and governance frameworks across care settings</span>
+          </div>
+        </div>
+        <div class="cred-row" role="listitem">
+          <div class="cred-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18"/></svg>
+          </div>
+          <div class="cred-txt">
+            <strong>Provisional patent filed — 15+ ecosystem components</strong>
+            <span>LineMap™ and LineLogic™ trademarks registered. Part of the PRISMqd Predictive Risk Intelligence platform.</span>
+          </div>
+        </div>
+        <div class="cred-row" role="listitem">
+          <div class="cred-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/></svg>
+          </div>
+          <div class="cred-txt">
+            <strong>Advisory board + confirmed pilot site</strong>
+            <span>Clinical systems engineering, infrastructure security, and clinical advisory support. Outpatient and long-term care pilot committed.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider" aria-hidden="true"></div>
+
+<!-- FAQ -->
+<section aria-label="Frequently asked questions">
+  <div class="faq-inner">
+    <div class="faq-head">
+      <div class="eyebrow-row"><span class="eyebrow">Common Questions</span></div>
+      <h2>Frequently asked.</h2>
+    </div>
+    <div class="faq-list" role="list">
+      <div class="faq-item" role="listitem">
+        <button class="faq-q" aria-expanded="false" aria-controls="faq-1">Is this a replacement for our EHR?<span class="faq-toggle" aria-hidden="true">+</span></button>
+        <div class="faq-body" id="faq-1" role="region">LineMap is a clinical decision support layer designed to operate alongside existing EHR infrastructure. It is not a documentation system and does not replace infusion records. It addresses the real-time decision interval between ordering and administration that EHRs are not built to support.</div>
+      </div>
+      <div class="faq-item" role="listitem">
+        <button class="faq-q" aria-expanded="false" aria-controls="faq-2">What clinical environments is LineMap built for?<span class="faq-toggle" aria-hidden="true">+</span></button>
+        <div class="faq-body" id="faq-2" role="region">LineMap is purpose-built for high-acuity environments where IV complexity and IV consequence are highest — ICU, step-down, rapid response, and cardiac units. The current pilot cohort includes acute care and long-term care settings. Architecture supports extension to any environment with active IV management.</div>
+      </div>
+      <div class="faq-item" role="listitem">
+        <button class="faq-q" aria-expanded="false" aria-controls="faq-3">Where is the product in its development cycle?<span class="faq-toggle" aria-hidden="true">+</span></button>
+        <div class="faq-body" id="faq-3" role="region">LineMap has a functional prototype with core clinical decision support features active. The pilot phase is structured to validate clinical workflow integration and real-world performance against complex case populations. Provisional patent filed. LineMap™ and LineLogic™ trademarks registered. A $1.5M pre-seed raise is in progress.</div>
+      </div>
+      <div class="faq-item" role="listitem">
+        <button class="faq-q" aria-expanded="false" aria-controls="faq-4">What does the pilot program involve for our site?<span class="faq-toggle" aria-hidden="true">+</span></button>
+        <div class="faq-body" id="faq-4" role="region">Pilot sites receive direct access to the LineMap prototype, structured onboarding with the founding team, and participation in feedback and clinical validation. There is no cost to pilot partners. A limited cohort of clinical sites is being selected across care settings. Nursing or clinical leadership sponsorship is required.</div>
+      </div>
+      <div class="faq-item" role="listitem">
+        <button class="faq-q" aria-expanded="false" aria-controls="faq-5">How is LineMap architected for HIPAA compliance and data security?<span class="faq-toggle" aria-hidden="true">+</span></button>
+        <div class="faq-body" id="faq-5" role="region">LineMap infrastructure is being built to HIPAA Security Rule standards: AWS HIPAA-eligible services, encryption at rest and in transit, and role-based access controls. Full security and compliance documentation is available to qualified pilot partners under NDA prior to onboarding.</div>
+      </div>
+      <div class="faq-item" role="listitem">
+        <button class="faq-q" aria-expanded="false" aria-controls="faq-6">Who is the founding team?<span class="faq-toggle" aria-hidden="true">+</span></button>
+        <div class="faq-body" id="faq-6" role="region">PRISMqd was founded by Jennifer Torrez, BSN RN — a critical care nurse and healthcare systems designer with 20+ years in healthcare — alongside Damion Torrez, a human-centered design and interface systems specialist with a U.S. Air Force background. Extended team includes clinical systems engineering at UPMC, AWS/HIPAA infrastructure architecture, and advisory clinical leadership at the outpatient and long-term care level.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider" aria-hidden="true"></div>
+
+<!-- CTA / FORM -->
+<section id="contact" class="cta-outer" aria-label="Pilot application">
+  <div class="cta-glow" aria-hidden="true"></div>
+  <div class="cta-inner-wrap">
+    <div class="cta-text-col">
+      <div class="eyebrow-row"><span class="eyebrow">Pilot Access</span></div>
+      <h2>Apply for the<br>LineMap Pilot Program.</h2>
+      <p>A limited cohort of clinical sites is being selected for initial deployment. Applications are reviewed directly by the founding team. Priority given to sites with complex IV patient populations and clinical or nursing leadership sponsorship.</p>
+      <div class="pilot-list" aria-label="Pilot selection criteria">
+        <div class="pilot-item">ICU, step-down, cardiac, or high-acuity unit</div>
+        <div class="pilot-item">Active IV complexity: multi-lumen central access, vasoactives, or continuous infusions</div>
+        <div class="pilot-item">Nursing or clinical leadership sponsorship at the unit or system level</div>
+        <div class="pilot-item">Interest in real-world validation and direct product input</div>
+      </div>
+    </div>
+    <div class="form-card">
+      <div class="form-head">
+        <span class="eyebrow">Application</span>
+        <h3>Request Pilot Access</h3>
+      </div>
+      <form id="pilot-form" novalidate>
+        <div class="fld-row">
+          <div>
+            <label class="fld-lbl" for="f-fname">First Name</label>
+            <input type="text" id="f-fname" name="first_name" placeholder="First" required autocomplete="given-name">
+          </div>
+          <div>
+            <label class="fld-lbl" for="f-lname">Last Name</label>
+            <input type="text" id="f-lname" name="last_name" placeholder="Last" required autocomplete="family-name">
+          </div>
+        </div>
+        <div class="fld">
+          <label class="fld-lbl" for="f-email">Email Address</label>
+          <input type="email" id="f-email" name="email" placeholder="your@organization.org" required autocomplete="email">
+        </div>
+        <div class="fld">
+          <label class="fld-lbl" for="f-org">Organization</label>
+          <input type="text" id="f-org" name="organization" placeholder="Hospital / Health System" autocomplete="organization">
+        </div>
+        <div class="fld">
+          <label class="fld-lbl" for="f-role">Role</label>
+          <select id="f-role" name="role">
+            <option value="" disabled selected>Select role</option>
+            <option>CNO / ACNO</option>
+            <option>Clinical Director / VP of Patient Care</option>
+            <option>Nurse Manager</option>
+            <option>Charge Nurse / Staff RN</option>
+            <option>Clinical Pharmacist</option>
+            <option>Patient Safety / Quality</option>
+            <option>CMO / Medical Director</option>
+            <option>Investor / Health Tech</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label class="fld-lbl" for="f-context">Clinical Context <span style="opacity:0.6;font-size:12px;letter-spacing:0.05em;">optional</span></label>
+          <textarea id="f-context" name="clinical_context" placeholder="Unit type, patient volume, IV complexity, or anything relevant"></textarea>
+        </div>
+        <input type="hidden" name="_replyto" value="jen@prismqd.ai">
+        <input type="hidden" name="_subject" value="LineMap Pilot Application">
+        <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off">
+        <button type="submit" class="submit-btn" id="submit-btn">Submit Pilot Application</button>
+        <p class="form-note-txt">Applications reviewed within 5 business days &nbsp;·&nbsp; No cost to pilot partners</p>
+      </form>
+      <div class="form-success-block" id="form-success" role="status" aria-live="polite">
+        <p class="s-title">Application received.</p>
+        <p class="s-sub">We'll review and be in touch within 5 business days.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer role="contentinfo">
+  <div class="ft-logo">
+    <a href="https://prismqd.ai" aria-label="PRISMqd website">
+      <img src="logo.png" alt="PRISMqd">
+    </a>
+  </div>
+  <p class="ft-copy">© 2025 PRISMqd · LineMap™ · LineLogic™ · All rights reserved</p>
+  <nav class="ft-links" aria-label="Footer links">
+    <a href="https://prismqd.ai" target="_blank" rel="noopener noreferrer">PRISMqd.ai</a>
+    <span class="ft-sep" aria-hidden="true">·</span>
+    <a href="https://www.linkedin.com/company/prismqd"
+       target="_blank"
+       rel="noopener noreferrer"
+       aria-label="PRISMqd on LinkedIn"
+       class="ft-li-link">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+      </svg>
+      LinkedIn
+    </a>
+    <span class="ft-sep" aria-hidden="true">·</span>
+    <a href="mailto:jen@prismqd.ai">jen@prismqd.ai</a>
+    <span class="ft-sep" aria-hidden="true">·</span>
+    <button onclick="document.getElementById('priv-overlay').classList.add('open')"
+            aria-haspopup="dialog">
+      Privacy Policy
+    </button>
+  </nav>
+</footer>
+
+<script>
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 50);
+  }, { passive: true });
+
+  document.querySelectorAll('.faq-q').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const item = this.closest('.faq-item');
+      const isOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(i => {
+        i.classList.remove('open');
+        i.querySelector('.faq-q').setAttribute('aria-expanded', 'false');
+      });
+      if (!isOpen) {
+        item.classList.add('open');
+        this.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+
+  document.getElementById('pilot-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const form = this;
+    const btn  = document.getElementById('submit-btn');
+    const succ = document.getElementById('form-success');
+
+    const req = form.querySelectorAll('[required]');
+    let valid = true;
+    req.forEach(el => {
+      if (!el.value.trim()) { el.style.borderColor = 'rgba(194,45,77,0.6)'; valid = false; }
+      else el.style.borderColor = '';
+    });
+    if (!valid) return;
+
+    btn.textContent = 'Submitting…';
+    btn.disabled = true;
+
+    try {
+      const resp = await fetch('https://formspree.io/f/xbdpglvo', {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { 'Accept': 'application/json' }
+      });
+      if (resp.ok) {
+        form.style.display = 'none';
+        succ.style.display = 'block';
+      } else { throw new Error(); }
+    } catch {
+      btn.textContent = 'Submit Pilot Application';
+      btn.disabled = false;
+      alert('Submission error. Please email jen@prismqd.ai directly.');
+    }
+  });
+</script>
+<!-- PRIVACY POLICY MODAL -->
+<div id="priv-overlay" class="priv-overlay" role="dialog" aria-modal="true" aria-labelledby="priv-title">
+  <div class="priv-modal">
+    <button class="priv-close" onclick="document.getElementById('priv-overlay').classList.remove('open')" aria-label="Close privacy policy">×</button>
+
+    <h2 id="priv-title">Privacy Policy</h2>
+    <p class="priv-date">Effective: January 1, 2025 · PRISMqd / LineMap</p>
+
+    <p>This policy covers information collected through the LineMap landing page at <a href="https://prismqd.ai">prismqd.ai</a> and its subdomains, operated by PRISMqd (Torrez Systems Lab).</p>
+
+    <h3>What We Collect</h3>
+    <p>When you submit a pilot application, we collect:</p>
+    <ul>
+      <li>First and last name</li>
+      <li>Professional email address</li>
+      <li>Organization name</li>
+      <li>Role / job title</li>
+      <li>Optional clinical context you provide voluntarily</li>
+    </ul>
+    <p>We do not collect patient data, protected health information (PHI), or any clinical records through this page.</p>
+
+    <h3>How We Use It</h3>
+    <p>Information submitted through the pilot application form is used solely to:</p>
+    <ul>
+      <li>Evaluate and respond to pilot access requests</li>
+      <li>Communicate about the LineMap pilot program</li>
+      <li>Understand the clinical environments where LineMap may be deployed</li>
+    </ul>
+    <p>We do not sell, rent, or share your information with third parties for marketing purposes.</p>
+
+    <h3>How It's Stored</h3>
+    <p>Form submissions are processed through Formspree (formspree.io), a third-party form handling service. Submissions are delivered to jen@prismqd.ai and stored in accordance with Formspree's privacy practices. You can review Formspree's privacy policy at <a href="https://formspree.io/legal/privacy-policy" target="_blank" rel="noopener noreferrer">formspree.io/legal/privacy-policy</a>.</p>
+
+    <h3>Cookies and Tracking</h3>
+    <p>This page does not use tracking cookies, analytics scripts, advertising pixels, or third-party behavioral tracking tools. Google Fonts are loaded from Google's CDN; their privacy practices are governed by <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">policies.google.com/privacy</a>.</p>
+
+    <h3>Your Rights</h3>
+    <p>You may request that we delete the information you submitted at any time by emailing <a href="mailto:jen@prismqd.ai">jen@prismqd.ai</a>. We will confirm deletion within 10 business days.</p>
+
+    <h3>Contact</h3>
+    <p>Questions about this policy: <a href="mailto:jen@prismqd.ai">jen@prismqd.ai</a><br>
+    PRISMqd · Grand Ledge, Michigan</p>
+  </div>
+</div>
+
+<script>
+  // Close modal on overlay click (outside modal box)
+  document.getElementById('priv-overlay').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+  });
+  // Close on Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') document.getElementById('priv-overlay').classList.remove('open');
+  });
+</script>
+
+</body>
 </html>
