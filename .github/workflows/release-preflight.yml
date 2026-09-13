@@ -1,0 +1,33 @@
+name: LineMap release preflight
+
+on:
+  pull_request:
+  push:
+    branches:
+      - codex/release-readiness-2026-09-13
+
+permissions:
+  contents: read
+
+jobs:
+  static-release-preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out exact candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Use Python 3
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run deterministic release preflight
+        run: python scripts/release_preflight.py
+      - name: Verify repository remains static-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -e package.json
+          test ! -e node_modules
+          echo "PASS: no package/runtime dependency surface introduced"
