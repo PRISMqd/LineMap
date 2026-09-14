@@ -27,6 +27,8 @@ REQUIRED_SNIPPETS = (
     "Do not provide patient information",
     'nav aria-label="Primary"',
     "a:focus-visible",
+    '<link rel="canonical" href="https://prismqd.github.io/LineMap/">',
+    '<meta property="og:url" content="https://prismqd.github.io/LineMap/">',
 )
 
 FORBIDDEN_PUBLIC_CLAIMS = (
