@@ -31,3 +31,25 @@ jobs:
           test ! -e package.json
           test ! -e node_modules
           echo "PASS: no package/runtime dependency surface introduced"
+      - name: Build exact static release artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release-artifact
+          cp index.html release-artifact/index.html
+          sha256sum release-artifact/index.html > release-artifact/SHA256SUMS
+          {
+            echo "repository=PRISMqd/LineMap"
+            echo "commit=${GITHUB_SHA}"
+            echo "workflow_run=${GITHUB_RUN_ID}"
+            echo "artifact=index.html"
+          } > release-artifact/PROVENANCE.txt
+          cat release-artifact/SHA256SUMS
+          cat release-artifact/PROVENANCE.txt
+      - name: Upload exact static release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linemap-static-${{ github.sha }}
+          path: release-artifact/
+          if-no-files-found: error
+          retention-days: 30
