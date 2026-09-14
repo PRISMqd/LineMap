@@ -37,7 +37,10 @@ jobs:
           set -euo pipefail
           mkdir -p release-artifact
           cp index.html release-artifact/index.html
-          sha256sum release-artifact/index.html > release-artifact/SHA256SUMS
+          (
+            cd release-artifact
+            sha256sum index.html > SHA256SUMS
+          )
           {
             echo "repository=PRISMqd/LineMap"
             echo "commit=${GITHUB_SHA}"
