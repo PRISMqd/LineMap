@@ -25,6 +25,8 @@ REQUIRED_SNIPPETS = (
     "No clinical, operational, or economic outcomes have been established",
     "https://prismqd.github.io/LineMapDemo/",
     "Do not provide patient information",
+    'nav aria-label="Primary"',
+    "a:focus-visible",
 )
 
 FORBIDDEN_PUBLIC_CLAIMS = (
@@ -51,6 +53,10 @@ class RefParser(HTMLParser):
         self.html_lang: str | None = None
         self.has_title = False
         self.meta_names: dict[str, str] = {}
+        self.h1_count = 0
+        self.empty_links = 0
+        self._anchor_depth = 0
+        self._anchor_has_text: list[bool] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         a = dict(attrs)
@@ -58,12 +64,27 @@ class RefParser(HTMLParser):
             self.html_lang = a.get("lang")
         if tag == "title":
             self.has_title = True
+        if tag == "h1":
+            self.h1_count += 1
         if tag == "meta" and a.get("name"):
             self.meta_names[a["name"]] = a.get("content") or ""
+        if tag == "a":
+            self._anchor_depth += 1
+            self._anchor_has_text.append(bool(a.get("aria-label")))
         for key in ("href", "src"):
             value = a.get(key)
             if value:
                 self.refs.append((key, value))
+
+    def handle_data(self, data: str) -> None:
+        if self._anchor_depth and data.strip() and self._anchor_has_text:
+            self._anchor_has_text[-1] = True
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == "a" and self._anchor_depth and self._anchor_has_text:
+            if not self._anchor_has_text.pop():
+                self.empty_links += 1
+            self._anchor_depth -= 1
 
 
 def local_path(ref: str) -> Path | None:
@@ -104,10 +125,14 @@ def main() -> None:
         errors.append("viewport meta is missing")
     if not parser.meta_names.get("description"):
         errors.append("meta description is missing")
+    if parser.h1_count != 1:
+        errors.append(f"exactly one h1 is required; found {parser.h1_count}")
+    if parser.empty_links:
+        errors.append(f"links without accessible text/label detected: {parser.empty_links}")
 
     for snippet in REQUIRED_SNIPPETS:
         if snippet not in text:
-            errors.append(f"required product-boundary text missing: {snippet!r}")
+            errors.append(f"required product-boundary/accessibility text missing: {snippet!r}")
 
     for phrase in FORBIDDEN_PUBLIC_CLAIMS:
         if phrase in lower:
@@ -121,6 +146,8 @@ def main() -> None:
         parsed = urlparse(ref)
         if parsed.scheme == "http":
             errors.append(f"insecure external {attr}: {ref}")
+        if not parsed.scheme and not ref.startswith(("//", "#")) and parsed.path.startswith("/"):
+            errors.append(f"root-relative {attr} is unsafe for a GitHub Pages project site: {ref}")
         candidate = local_path(ref)
         if candidate is not None and not candidate.exists():
             errors.append(f"missing repository-local {attr}: {ref}")
@@ -129,7 +156,7 @@ def main() -> None:
         fail(errors)
 
     print("PASS: LineMap static release preflight")
-    print(f"Checked {len(parser.refs)} href/src references and {len(REQUIRED_SNIPPETS)} product-boundary controls.")
+    print(f"Checked {len(parser.refs)} href/src references, {len(REQUIRED_SNIPPETS)} product/accessibility controls, and Pages-safe routing.")
     print("NOTE: External URL reachability and rendered GitHub Pages verification remain separate destination gates.")
 
 
