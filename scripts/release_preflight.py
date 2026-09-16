@@ -31,6 +31,8 @@ REQUIRED_SNIPPETS = (
     '<meta property="og:url" content="https://prismqd.github.io/LineMap/">',
 )
 
+EXPECTED_CSP = "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; font-src 'none'; connect-src 'none'; script-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
+
 FORBIDDEN_PUBLIC_CLAIMS = (
     "clinically validated",
     "proven to reduce",
@@ -55,6 +57,7 @@ class RefParser(HTMLParser):
         self.html_lang: str | None = None
         self.has_title = False
         self.meta_names: dict[str, str] = {}
+        self.meta_http_equiv: dict[str, str] = {}
         self.h1_count = 0
         self.empty_links = 0
         self._anchor_depth = 0
@@ -69,7 +72,9 @@ class RefParser(HTMLParser):
         if tag == "h1":
             self.h1_count += 1
         if tag == "meta" and a.get("name"):
-            self.meta_names[a["name"]] = a.get("content") or ""
+            self.meta_names[a["name"].lower()] = a.get("content") or ""
+        if tag == "meta" and a.get("http-equiv"):
+            self.meta_http_equiv[a["http-equiv"].lower()] = a.get("content") or ""
         if tag == "a":
             self._anchor_depth += 1
             self._anchor_has_text.append(bool(a.get("aria-label")))
@@ -127,6 +132,10 @@ def main() -> None:
         errors.append("viewport meta is missing")
     if not parser.meta_names.get("description"):
         errors.append("meta description is missing")
+    if parser.meta_names.get("referrer") != "no-referrer":
+        errors.append("referrer policy must remain no-referrer")
+    if parser.meta_http_equiv.get("content-security-policy") != EXPECTED_CSP:
+        errors.append("Content Security Policy is missing or weaker/different than the locked static runtime policy")
     if parser.h1_count != 1:
         errors.append(f"exactly one h1 is required; found {parser.h1_count}")
     if parser.empty_links:
@@ -158,7 +167,7 @@ def main() -> None:
         fail(errors)
 
     print("PASS: LineMap static release preflight")
-    print(f"Checked {len(parser.refs)} href/src references, {len(REQUIRED_SNIPPETS)} product/accessibility controls, and Pages-safe routing.")
+    print(f"Checked {len(parser.refs)} href/src references, {len(REQUIRED_SNIPPETS)} product/accessibility controls, locked CSP/referrer policy, and Pages-safe routing.")
     print("NOTE: External URL reachability and rendered GitHub Pages verification remain separate destination gates.")
 
 
