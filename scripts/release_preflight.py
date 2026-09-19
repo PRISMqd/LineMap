@@ -35,6 +35,7 @@ REQUIRED_SNIPPETS = (
 )
 
 EXPECTED_CSP = "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; font-src 'none'; connect-src 'none'; script-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
+ALLOWED_EXTERNAL_SCHEMES = {"https", "mailto"}
 
 FORBIDDEN_PUBLIC_CLAIMS = (
     "clinically validated",
@@ -111,6 +112,29 @@ def local_path(ref: str) -> Path | None:
     return ROOT / path
 
 
+def reference_errors(attr: str, ref: str) -> list[str]:
+    """Return fail-closed URI/reference-policy errors for one href/src value."""
+    parsed = urlparse(ref)
+    scheme = parsed.scheme.lower()
+    errors: list[str] = []
+
+    if ref.startswith("//"):
+        errors.append(f"protocol-relative external {attr} is forbidden: {ref}")
+    elif scheme:
+        if scheme not in ALLOWED_EXTERNAL_SCHEMES:
+            errors.append(f"disallowed external {attr} URI scheme {scheme!r}: {ref}")
+        elif scheme == "mailto" and attr != "href":
+            errors.append(f"mailto is allowed only for href, not {attr}: {ref}")
+    elif not ref.startswith("#") and parsed.path.startswith("/"):
+        errors.append(f"root-relative {attr} is unsafe for a GitHub Pages project site: {ref}")
+
+    candidate = local_path(ref)
+    if candidate is not None and not candidate.exists():
+        errors.append(f"missing repository-local {attr}: {ref}")
+
+    return errors
+
+
 def fail(errors: list[str]) -> None:
     for item in errors:
         print(f"ERROR: {item}", file=sys.stderr)
@@ -157,14 +181,7 @@ def main() -> None:
             errors.append(f"secret-shaped value detected ({name})")
 
     for attr, ref in parser.refs:
-        parsed = urlparse(ref)
-        if parsed.scheme == "http":
-            errors.append(f"insecure external {attr}: {ref}")
-        if not parsed.scheme and not ref.startswith(("//", "#")) and parsed.path.startswith("/"):
-            errors.append(f"root-relative {attr} is unsafe for a GitHub Pages project site: {ref}")
-        candidate = local_path(ref)
-        if candidate is not None and not candidate.exists():
-            errors.append(f"missing repository-local {attr}: {ref}")
+        errors.extend(reference_errors(attr, ref))
 
     if errors:
         fail(errors)
