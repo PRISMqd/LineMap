@@ -27,6 +27,9 @@ REQUIRED_SNIPPETS = (
     "Do not provide patient information",
     'nav aria-label="Primary"',
     "a:focus-visible",
+    '<a class="skip-link" href="#main-content">Skip to main content</a>',
+    '<main id="main-content" tabindex="-1">',
+    ".skip-link:focus",
     '<link rel="canonical" href="https://prismqd.github.io/LineMap/">',
     '<meta property="og:url" content="https://prismqd.github.io/LineMap/">',
 )
