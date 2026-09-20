@@ -30,11 +30,13 @@ REQUIRED_SNIPPETS = (
     '<a class="skip-link" href="#main-content">Skip to main content</a>',
     '<main id="main-content" tabindex="-1">',
     ".skip-link:focus",
+    '<section aria-labelledby="prototype-capabilities-heading">',
+    '<h2 class="eyebrow" id="prototype-capabilities-heading">Prototype capabilities</h2>',
     '<link rel="canonical" href="https://prismqd.github.io/LineMap/">',
     '<meta property="og:url" content="https://prismqd.github.io/LineMap/">',
 )
 
-EXPECTED_CSP = "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; font-src 'none'; connect-src 'none'; script-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
+EXPECTED_CSP = "default-src 'none'; style-src 'unsafe-inline'; img-src 'none'; font-src 'none'; connect-src 'none'; script-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
 ALLOWED_EXTERNAL_SCHEMES = {"https", "mailto"}
 
 FORBIDDEN_PUBLIC_CLAIMS = (
@@ -63,6 +65,7 @@ class RefParser(HTMLParser):
         self.meta_names: dict[str, str] = {}
         self.meta_http_equiv: dict[str, str] = {}
         self.h1_count = 0
+        self.heading_levels: list[int] = []
         self.empty_links = 0
         self._anchor_depth = 0
         self._anchor_has_text: list[bool] = []
@@ -75,6 +78,8 @@ class RefParser(HTMLParser):
             self.has_title = True
         if tag == "h1":
             self.h1_count += 1
+        if len(tag) == 2 and tag[0] == "h" and tag[1] in "123456":
+            self.heading_levels.append(int(tag[1]))
         if tag == "meta" and a.get("name"):
             self.meta_names[a["name"].lower()] = a.get("content") or ""
         if tag == "meta" and a.get("http-equiv"):
@@ -96,6 +101,14 @@ class RefParser(HTMLParser):
             if not self._anchor_has_text.pop():
                 self.empty_links += 1
             self._anchor_depth -= 1
+
+
+def heading_order_errors(levels: list[int]) -> list[str]:
+    errors: list[str] = []
+    for previous, current in zip(levels, levels[1:]):
+        if current > previous + 1:
+            errors.append(f"heading hierarchy skips from h{previous} to h{current}")
+    return errors
 
 
 def local_path(ref: str) -> Path | None:
@@ -165,6 +178,7 @@ def main() -> None:
         errors.append("Content Security Policy is missing or weaker/different than the locked static runtime policy")
     if parser.h1_count != 1:
         errors.append(f"exactly one h1 is required; found {parser.h1_count}")
+    errors.extend(heading_order_errors(parser.heading_levels))
     if parser.empty_links:
         errors.append(f"links without accessible text/label detected: {parser.empty_links}")
 
@@ -187,7 +201,7 @@ def main() -> None:
         fail(errors)
 
     print("PASS: LineMap static release preflight")
-    print(f"Checked {len(parser.refs)} href/src references, {len(REQUIRED_SNIPPETS)} product/accessibility controls, locked CSP/referrer policy, and Pages-safe routing.")
+    print(f"Checked {len(parser.refs)} href/src references, {len(REQUIRED_SNIPPETS)} product/accessibility controls, heading hierarchy, locked CSP/referrer policy, and Pages-safe routing.")
     print("NOTE: External URL reachability and rendered GitHub Pages verification remain separate destination gates.")
 
 

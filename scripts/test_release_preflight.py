@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Dependency-free regressions for LineMap static release URI policy."""
+"""Dependency-free regressions for LineMap static release policy."""
 from __future__ import annotations
 
 import unittest
 
-from release_preflight import reference_errors
+from release_preflight import heading_order_errors, reference_errors
 
 
 class ReferencePolicyTests(unittest.TestCase):
@@ -37,6 +37,13 @@ class ReferencePolicyTests(unittest.TestCase):
 
     def test_root_relative_project_site_reference_fails_closed(self) -> None:
         self.assert_blocked("href", "/")
+
+    def test_heading_hierarchy_allows_same_or_one_level_steps(self) -> None:
+        self.assertEqual(heading_order_errors([1, 2, 3, 3, 2]), [])
+
+    def test_heading_hierarchy_rejects_skipped_levels(self) -> None:
+        self.assertTrue(heading_order_errors([1, 3]))
+        self.assertTrue(heading_order_errors([1, 2, 4]))
 
 
 if __name__ == "__main__":
